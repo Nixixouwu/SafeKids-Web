@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeKIDS - Panel de Colegios</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles-panelcolegios.css">
+</head>
+<body class="panelcolegios-page">
+    <header class="bg-transparent py-3">
+        <div class="container">
+            <nav class="navbar navbar-expand-lg">
+                <a class="navbar-brand d-flex align-items-center" href="#">
+                    <img src="assets/logo/logo safekids.png" alt="SafeKIDS Logo" width="50" class="me-2">
+                    <span class="text-black">SAFEKIDS</span>
+                </a>
+                <button class="navbar-toggler text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <div class="d-flex gap-2 ms-lg-3 mt-3 mt-lg-0">
+                        <button class="btn btn-light" onclick="window.location.href='logout.html'">SALIR</button>   
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Firebase JS SDK -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDEjsPJRsEP4V5mtXeAdDWJ4qqmaWI01F4",
+            authDomain: "safekidsdatabase.firebaseapp.com",
+            databaseURL: "https://safekidsdatabase-default-rtdb.firebaseio.com",
+            projectId: "safekidsdatabase",
+            storageBucket: "safekidsdatabase.appspot.com",
+            messagingSenderId: "20871834686",
+            appId: "1:20871834686:web:c47df804eddb6f4e9ab56f",
+            measurementId: "G-MS983GD0MJ"
+        };
+
+        // Initialize Firebase  
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+    </script>
+
+    <main class="container my-5">
+        <!-- Formulario de Apoderado y Estudiante -->
+        <form id="apoderadoForm" class="row g-3 mb-4">
+            <div class="col-md-6">
+                <h5>Datos del Tutor</h5>
+                <label for="nombre" class="form-label">Nombre</label>
+                <input type="text" id="nombre" class="form-control" required>
+                
+                <label for="apellido" class="form-label">Apellido</label>
+                <input type="text" id="apellido" class="form-control" required>
+                
+                <label for="rut" class="form-label">RUT</label>
+                <input type="text" id="rut" class="form-control" required>
+                
+                <label for="telefono" class="form-label">Teléfono</label>
+                <input type="text" id="telefono" class="form-control" required>
+                
+                <label for="correo" class="form-label">Correo Electrónico</label>
+                <input type="email" id="correo" class="form-control" required>
+                
+                <label for="contrasena" class="form-label">Contraseña</label>
+                <input type="password" id="contrasena" class="form-control" required>
+                
+                <label for="edad" class="form-label">Edad</label>
+                <input type="number" id="edad" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+                <h5>Datos del Estudiante</h5>
+                <label for="estudianteNombre" class="form-label">Nombre</label>
+                <input type="text" id="estudianteNombre" class="form-control" required>
+                
+                <label for="estudianteApellido" class="form-label">Apellido</label>
+                <input type="text" id="estudianteApellido" class="form-control" required>
+                
+                <label for="estudianteRut" class="form-label">RUT</label>
+                <input type="text" id="estudianteRut" class="form-control" required>
+                
+                <label for="estudianteDireccion" class="form-label">Dirección</label>
+                <input type="text" id="estudianteDireccion" class="form-control" required>
+                
+                <label for="estudianteGenero" class="form-label">Género</label>
+                <select id="estudianteGenero" class="form-select" required>
+                    <option value="" disabled selected>Seleccione</option>
+                    <option value="masculino">Masculino</option>
+                    <option value="femenino">Femenino</option>
+                </select>
+                
+                <label for="estudianteCurso" class="form-label">Curso</label>
+                <input type="text" id="estudianteCurso" class="form-control" required>
+                
+                <label for="estudianteColegio" class="form-label">Colegio</label>
+                <input type="text" id="estudianteColegio" class="form-control" required>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">Guardar Tutor y Estudiante</button>
+            </div>
+        </form>
+
+        <!-- Listar Apoderados -->
+        <h5>Lista de Apoderados</h5>
+        <div class="table-responsive" style="background-color: white; padding: 20px; border-radius: 5px;">
+            <table class="table table-striped" id="apoderadosTable">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>RUT</th>
+                        <th>Teléfono</th>
+                        <th>Correo</th>
+                        <th>Edad</th>
+                        <th>Estudiante</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Aquí se llenará con JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
+    <script src="https://adminlte.io/themes/v3/dist/js/adminlte.js"></script>
+
+    <script type="module">
+        const apoderados = [];
+
+        // Función para agregar o actualizar apoderados en Firestore
+        document.getElementById('apoderadoForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // Evitar recarga de página
+
+            const nombre = document.getElementById('nombre').value;
+            const apellido = document.getElementById('apellido').value;
+            const rut = document.getElementById('rut').value;
+            const telefono = document.getElementById('telefono').value;
+            const correo = document.getElementById('correo').value;
+            const contrasena = document.getElementById('contrasena').value;
+            const edad = document.getElementById('edad').value;
+
+            const estudiante = {
+                nombre: document.getElementById('estudianteNombre').value,
+                apellido: document.getElementById('estudianteApellido').value,
+                rut: document.getElementById('estudianteRut').value,
+                direccion: document.getElementById('estudianteDireccion').value,
+                genero: document.getElementById('estudianteGenero').value,
+                curso: document.getElementById('estudianteCurso').value,
+                colegio: document.getElementById('estudianteColegio').value
+            };
+
+            try {
+                await setDoc(doc(db, "apoderados", rut), {
+                    nombre,
+                    apellido,
+                    telefono,
+                    correo,
+                    edad,
+                    estudiante
+                });
+                console.log("Apoderado guardado con éxito");
+                renderTable();
+                document.getElementById('apoderadoForm').reset();
+            } catch (error) {
+                console.error("Error al guardar el apoderado: ", error);
+            }
+        });
+
+        // Obtener apoderados de Firestore
+        async function getApoderados() {
+            const querySnapshot = await getDocs(collection(db, "apoderados"));
+            apoderados.length = 0; // Limpiar el arreglo
+            querySnapshot.forEach((doc) => {
+                apoderados.push({ id: doc.id, ...doc.data() });
+            });
+            renderTable();
+        }
+
+        // Renderizar tabla de apoderados
+        function renderTable() {
+            const tableBody = document.querySelector('#apoderadosTable tbody');
+            tableBody.innerHTML = ''; // Limpiar la tabla
+
+            apoderados.forEach((apoderado) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${apoderado.nombre}</td>
+                    <td>${apoderado.apellido}</td>
+                    <td>${apoderado.id}</td>
+                    <td>${apoderado.telefono}</td>
+                    <td>${apoderado.correo}</td>
+                    <td>${apoderado.edad}</td>
+                    <td>${apoderado.estudiante.nombre} ${apoderado.estudiante.apellido}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="editApoderado('${apoderado.id}')">Editar</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteApoderado('${apoderado.id}')">Eliminar</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Función para eliminar apoderado
+        async function deleteApoderado(id) {
+            try {
+                await deleteDoc(doc(db, "apoderados", id));
+                console.log("Apoderado eliminado");
+                getApoderados();
+            } catch (error) {
+                console.error("Error al eliminar apoderado: ", error);
+            }
+        }
+
+        // Función para editar apoderado (por simplificación, solo se cargan datos)
+        function editApoderado(id) {
+            const apoderado = apoderados.find(ap => ap.id === id);
+            if (apoderado) {
+                document.getElementById('nombre').value = apoderado.nombre;
+                document.getElementById('apellido').value = apoderado.apellido;
+                document.getElementById('rut').value = apoderado.id;
+                document.getElementById('telefono').value = apoderado.telefono;
+                document.getElementById('correo').value = apoderado.correo;
+                document.getElementById('edad').value = apoderado.edad;
+
+                document.getElementById('estudianteNombre').value = apoderado.estudiante.nombre;
+                document.getElementById('estudianteApellido').value = apoderado.estudiante.apellido;
+                document.getElementById('estudianteRut').value = apoderado.estudiante.rut;
+                document.getElementById('estudianteDireccion').value = apoderado.estudiante.direccion;
+                document.getElementById('estudianteGenero').value = apoderado.estudiante.genero;
+                document.getElementById('estudianteCurso').value = apoderado.estudiante.curso;
+                document.getElementById('estudianteColegio').value = apoderado.estudiante.colegio;
+            }
+        }
+
+        // Cargar apoderados al cargar la página
+        window.addEventListener('DOMContentLoaded', getApoderados);
+    </script>
+</body>
+</html>

@@ -8,11 +8,9 @@
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles-register.css">
-
-
     <style>
         footer {
-        color: white;   
+            color: white;   
         }
     </style>
 </head>
@@ -46,53 +44,75 @@
     <main>
         <section class="registro">
             <h1>Crear una Cuenta</h1>
-            <form class="form-registro">
+            <form class="form-registro" id="registroForm" action="https://formspree.io/f/movagekg" method="POST">
                 <div class="form-group">
                     <label for="nombre">Nombre del Representante</label>
-                    <input type="text" id="nombre" placeholder="Nombre Apellido">
+                    <input type="text" id="nombre" name="nombre" placeholder="Nombre Apellido" required>
                 </div>
                 <div class="form-group">
                     <label for="email">E-mail</label>
-                    <input type="email" id="email" placeholder="hello@correo.com">
+                    <input type="email" id="email" name="email" placeholder="hello@correo.com" required>
                 </div>
                 <div class="form-group">
                     <label for="telefono">Teléfono</label>
-                    <input type="text" id="telefono" placeholder="+569 888 150 33">
+                    <input type="text" id="telefono" name="telefono" placeholder="+569 888 150 33" required>
                 </div>
                 <div class="form-group">
                     <label for="instituto">Selecciona Instituto Educacional</label>
-                    <select id="instituto">
+                    <select id="instituto" name="instituto">
                         <option value="Mira Valle">Mira Valle</option>
-                        <option value="Mira Valle">Valle Hermoso</option>
-                        <option value="Mira Valle">Duoc UC</option>
+                        <option value="Valle Hermoso">Valle Hermoso</option>
+                        <option value="Duoc UC">Duoc UC</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="rol">Selecciona Rol Educacional</label>
-                    <select id="rol">
+                    <select id="rol" name="rol">
                         <option value="Director">Director</option>
-                        <option value="Director">Sub Director</option>
-                        <option value="Director">Representante Legal</option>
-                        <option value="Director">Profesor</option>
+                        <option value="Sub Director">Sub Director</option>
+                        <option value="Representante Legal">Representante Legal</option>
+                        <option value="Profesor">Profesor</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="password">Crear Clave</label>
-                    <input type="password" id="password" placeholder="********">
-                </div>
+
                 <div class="form-check">
-                    <input type="checkbox" id="terms" class="form-check-input">
+                    <input type="checkbox" id="terms" class="form-check-input" name="terms" required>
                     <label for="terms">Al solicitar registro estás aceptando nuestras condiciones, puedes leerlas <a href="#">aquí</a>.</label>
                 </div>
-                <button class="btn registro">Solicitar Registro</button>
+                <button class="btn registro" type="submit">Solicitar Registro</button>
             </form>
+            <p id="loadingMessage" style="display:none; color: blue;">Enviando formulario...</p>
+            <p id="successMessage" style="display:none; color: green;">¡Registro enviado con éxito!</p>
+            <p id="errorMessage" style="display:none; color: red;">Hubo un error al enviar el formulario.</p>
         </section>
     </main>
 
     <footer>
         <p>2024 - SafeKids Todos los derechos reservados</p>
     </footer>
+
     <!-- Bootstrap JS and Popper.js -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.getElementById('registroForm').addEventListener('submit', function(event) {
+            document.getElementById('loadingMessage').style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+
+            // Mostrar mensaje de éxito después de la sumisión exitosa (Formspree se encarga de enviar el formulario)
+            event.target.addEventListener('submit', function() {
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('successMessage').style.display = 'block';
+                document.getElementById('registroForm').reset();
+            });
+
+            // Si hay un error, muestra el mensaje de error
+            event.target.addEventListener('error', function() {
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('errorMessage').style.display = 'block';
+            });
+        });
+    </script>
 </body>
 </html>

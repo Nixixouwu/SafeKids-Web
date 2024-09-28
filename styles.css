@@ -36,6 +36,29 @@ body.contact-page {
     background-repeat: no-repeat;
 }
 
+
+/* Fondo solo para panel.html */
+body.panel-page {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    height: 100%;
+    background-image: url('assets/fondos/register.png'); /* Imagen de fondo */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Fondo solo para panelcolegios.html */
+body {
+    background-image: url('assets/fondos/register.png'); /* Cambia la ruta por la de tu imagen */
+    background-size: cover; /* Para cubrir toda la pantalla */
+    background-position: center; /* Centrar la imagen */
+    background-repeat: no-repeat; /* Evitar que la imagen se repita */
+}
+
 /* Header and Footer transparent background */
 header, footer {
     background-color: rgba(246, 245, 245, 0);
@@ -301,3 +324,5 @@ form label {
         width: 100%;
     }
 }
+
+

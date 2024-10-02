@@ -1,0 +1,21 @@
+<app-header></app-header>
+<div class="container-login">
+  <div class="form-container">
+    <h2>SafeKids Instituciones</h2>
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <input type="email" id="email" formControlName="email" placeholder="hello@correo.com" required>
+      </div>
+      <div class="form-group">
+        <input type="password" id="password" formControlName="password" placeholder="********" required>
+      </div>
+      <button type="submit" class="btn-submit" [disabled]="!loginForm.valid">Entrar</button>
+    </form>
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+    <div class="forgot-password">
+      <a href="#">¿Has olvidado tu clave? Recupérala aquí.</a>
+    </div>
+  </div>
+</div>

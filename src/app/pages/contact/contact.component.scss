@@ -1,0 +1,130 @@
+:host {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(to right, #8b52fe, #00be63);
+}
+
+.contact-container {
+    width: 90%;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.info-section, .form-section {
+    padding: 2rem;
+}
+
+.info-section {
+    color: white;
+    text-align: center; // Center all text
+    display: flex;
+    flex-direction: column;
+    justify-content: center; // Vertically center content
+
+
+    h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: #ffd700;
+        font-weight: bold;
+    }
+
+    p {
+        margin-bottom: 1rem;
+    }
+
+    ul {
+        list-style-type: none;
+        padding: 0;
+        font-weight: bold;
+
+        li {
+            margin-bottom: 0.5rem;
+
+            a {
+                color: #ffd700;
+                text-decoration: none;
+
+                &:hover {
+                    text-decoration: underline;
+                }
+            }
+        }
+    }
+}
+
+.form-section { 
+
+    small {
+        font-weight: bold;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-control {
+        background: rgba(255, 255, 255, 0.9);
+        border: none;
+        border-radius: 1rem;
+        padding: 0.5rem 1rem;
+    }
+
+    .btn-primary {
+        background-color: #ffd700;
+        border-color: #ffd700;
+        color: #333;
+        font-weight: bold;
+        border-radius: 1rem;
+        padding: 0.5rem;
+        width: 100%;
+    }
+
+
+    .phone-input {
+        display: flex;
+        
+
+        .input-group-prepend {
+            .input-group-text {
+                background-color: rgba(255, 255, 255, 0.9);
+                
+                border-radius: 1rem 0 0 1rem;
+                padding: 0.75rem;
+                font-weight: bold;
+            }
+        }
+
+        input[type="tel"] {
+            border-radius: 0 1rem 1rem 0;
+            border-left: none;
+        }
+    }
+
+    .form-text {
+        font-size: 0.8rem;
+        color: black;
+        margin-top: 0.25rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .row {
+        flex-direction: column;
+    }
+
+    .info-section, .form-section {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
+

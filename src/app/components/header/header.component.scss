@@ -1,0 +1,56 @@
+:host {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+header {
+  background: transparent;
+  padding: 1rem;
+}
+
+.navbar-brand {
+  color: white;
+  font-weight: bold;
+}
+
+.nav-link {
+  color: white !important;
+  font-weight: 500;
+}
+
+.btn-primary {
+  background-color: #ffd700;
+  border-color: #ffd700;
+  color: #333;
+
+
+&:hover, &:focus, &:active {
+  background-color: #ffd700;
+  border-color: #ffd700;
+  color: #333;
+}
+}
+
+.btn-outline-light {
+  background-color: white;
+  border-color: white;
+  color: #333;
+}
+
+// Ensure the mobile menu button is visible
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+// Add more space between nav items if needed
+.nav-item {
+  margin-right: 1rem;
+}
+
+// Increase space between buttons if needed
+.btn {
+  margin-left: 0.5rem;
+}

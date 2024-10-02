@@ -1,0 +1,76 @@
+<div class="colleges-panel">
+    <h2 class="mb-4">Agregar o Editar Colegio</h2>
+    <form [formGroup]="colegioForm" (ngSubmit)="onSubmit()" class="mb-5">
+      <input type="hidden" formControlName="id">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="nombre" formControlName="Nombre" placeholder="Nombre del Colegio">
+            <label for="nombre">Nombre del Colegio</label>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="direccion" formControlName="Direccion" placeholder="Dirección">
+            <label for="direccion">Dirección</label>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-floating mb-3">
+            <input type="email" class="form-control" id="email" formControlName="Email" placeholder="Email">
+            <label for="email">Email</label>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-floating mb-3">
+            <input type="tel" class="form-control" id="telefono" formControlName="Telefono" placeholder="Teléfono">
+            <label for="telefono">Teléfono</label>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="encargado" formControlName="Encargado" placeholder="Director">
+            <label for="encargado">Director</label>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-floating mb-3">
+            <input type="number" class="form-control" id="id" formControlName="ID" placeholder="ID del Colegio">
+            <label for="id">ID del Colegio</label>
+          </div>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary" [disabled]="!colegioForm.valid">Guardar</button>
+    </form>
+
+    <h2 class="mb-4">Lista de Colegios</h2>
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Dirección</th>
+            <th>Email</th>
+            <th>Teléfono</th>
+            <th>Director</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let colegio of colegios">
+            <td>{{ colegio.ID }}</td>
+            <td>{{ colegio.Nombre }}</td>
+            <td>{{ colegio.Direccion }}</td>
+            <td>{{ colegio.Email }}</td>
+            <td>{{ colegio.Telefono }}</td>
+            <td>{{ colegio.Encargado }}</td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary me-2" (click)="editColegio(colegio)">Editar</button>
+              <button class="btn btn-sm btn-outline-danger" (click)="deleteColegio(colegio.id)">Eliminar</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>

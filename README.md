@@ -1,2 +1,0 @@
-# SafeKids-Web
-SafeKids Web

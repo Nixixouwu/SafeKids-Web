@@ -1,0 +1,63 @@
+h2 {
+  color: #333;
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+.form-control, .btn {
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 1rem;
+  padding: 0.5rem 1rem;
+}
+
+.btn-primary {
+  background-color: #333;
+  color: white;
+  font-weight: bold;
+  width: 100%;
+  
+  &:hover, &:focus {
+    background-color: #333;
+    border-color: #333;
+    color: white;
+  }
+}
+
+table {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 1rem;
+  overflow: hidden;
+  
+  th, td {
+    padding: 0.75rem;
+  }
+}
+
+.apoderados-panel {
+  color: #fff;
+}
+
+.form-floating > .form-control,
+.form-floating > .form-control-plaintext {
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.form-floating > .form-control:focus,
+.form-floating > .form-control:not(:placeholder-shown) {
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.form-floating > label {
+  color: #333;
+}
+
+.table {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.table-light {
+  background-color: rgba(255, 255, 255, 0.95);
+}

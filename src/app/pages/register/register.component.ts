@@ -4,6 +4,8 @@ import { Router } from '@angular/router';
 import { FirebaseService } from '../../services/firebase.service';
 import { CommonModule } from '@angular/common';
 import { HeaderComponent } from '../../components/header/header.component';
+import { rutValidator } from '../../validators/rut.validator';
+import { RutFormatterDirective } from '../../validators/rut-formatter.validator';
 
 interface College {
   id: string;
@@ -15,7 +17,7 @@ interface College {
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HeaderComponent]
+  imports: [CommonModule, ReactiveFormsModule, HeaderComponent, RutFormatterDirective]
 })
 export class RegisterComponent implements OnInit {
   registerForm: FormGroup;
@@ -28,7 +30,7 @@ export class RegisterComponent implements OnInit {
     private router: Router
   ) {
     this.registerForm = this.fb.group({
-      rut: ['', Validators.required],
+      rut: ['', [Validators.required, rutValidator()]],
       nombre: ['', Validators.required],
       apellido: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],

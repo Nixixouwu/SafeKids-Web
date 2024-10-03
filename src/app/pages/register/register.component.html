@@ -5,27 +5,31 @@
     <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
       <div class="form-group">
         <label for="rut">RUT</label>
-        <input type="text" id="rut" formControlName="rut" placeholder="RUT" required>
+        <input type="text" id="rut" formControlName="rut" placeholder="RUT" maxlength="10" required appRutFormatter>
+        <div *ngIf="registerForm.get('rut')?.invalid && (registerForm.get('rut')?.dirty || registerForm.get('rut')?.touched)" class="error-message">
+          <div *ngIf="registerForm.get('rut')?.errors?.['required']">RUT es requerido.</div>
+          <div *ngIf="registerForm.get('rut')?.errors?.['rutInvalid']">{{ registerForm.get('rut')?.errors?.['rutInvalid'] }}</div>
+        </div>
       </div>
       <div class="form-group">
         <label for="nombre">Nombre</label>
-        <input type="text" id="nombre" formControlName="nombre" placeholder="Nombre" required>
+        <input type="text" id="nombre" formControlName="nombre" placeholder="Nombre" maxlength="50" required>
       </div>
       <div class="form-group">
         <label for="apellido">Apellido</label>
-        <input type="text" id="apellido" formControlName="apellido" placeholder="Apellido" required>
+        <input type="text" id="apellido" formControlName="apellido" placeholder="Apellido" maxlength="50" required>
       </div>
       <div class="form-group">
         <label for="email">E-mail</label>
-        <input type="email" id="email" formControlName="email" placeholder="hello@correo.com" required>
+        <input type="email" id="email" formControlName="email" placeholder="hello@correo.com" maxlength="100" required>
       </div>
       <div class="form-group">
         <label for="password">Contraseña</label>
-        <input type="password" id="password" formControlName="password" placeholder="********" required>
+        <input type="password" id="password" formControlName="password" placeholder="********" maxlength="50" required>
       </div>
       <div class="form-group">
         <label for="telefono">Teléfono</label>
-        <input type="tel" id="telefono" formControlName="telefono" placeholder="+569 8888 1503" required>
+        <input type="tel" id="telefono" formControlName="telefono" placeholder="56912345678" maxlength="15" required>
       </div>
       <div class="form-group">
         <label for="fk_adcolegio">Selecciona Instituto Educacional</label>

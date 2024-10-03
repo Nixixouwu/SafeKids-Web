@@ -98,3 +98,32 @@ a {
         width: 95%;
     }
 }
+
+.error-cloud {
+    background-color: #ffebee;
+    border: 1px solid #ffcdd2;
+    border-radius: 1rem;
+    color: #b71c1c;
+    margin-top: 1rem;
+    padding: 1rem;
+    text-align: center;
+}
+
+.phone-input {
+    display: flex;
+
+    .input-group-prepend {
+        .input-group-text {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 1rem 0 0 1rem;
+            padding: 0.75rem;
+            font-weight: bold;
+            color: #333;
+        }
+    }
+
+    input[type="tel"] {
+        border-radius: 0 1rem 1rem 0;
+        border-left: none;
+    }
+}

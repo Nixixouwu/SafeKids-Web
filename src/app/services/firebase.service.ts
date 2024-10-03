@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Auth, User, user, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword } from '@angular/fire/auth';
-import { Firestore, doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc } from '@angular/fire/firestore';
+import { Firestore, doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, query, where } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 
 interface AdminData {
@@ -175,5 +175,12 @@ export class FirebaseService {
   async deleteApoderado(rut: string): Promise<void> {
     const apoderadoDoc = doc(this.firestore, 'Apoderado', rut);
     await deleteDoc(apoderadoDoc);
+  }
+
+  async checkEmailExists(email: string): Promise<boolean> {
+    const adminCollection = collection(this.firestore, 'Admin');
+    const q = query(adminCollection, where('Email', '==', email));
+    const querySnapshot = await getDocs(q);
+    return !querySnapshot.empty;
   }
 }

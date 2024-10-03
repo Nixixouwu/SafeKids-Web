@@ -33,7 +33,7 @@ h2 {
         width: 100%;
         padding: 0.75rem 1rem;
         border: none;
-        border-radius: 0.5rem;
+        border-radius: 1rem;
         background: rgba(255, 255, 255, 0.9);
         font-size: 1rem;
     }
@@ -45,7 +45,7 @@ h2 {
     background-color: #ffd700;
     color: #333;
     border: none;
-    border-radius: 0.5rem;
+    border-radius: 1rem;
     font-size: 18px;
     font-weight: bold;
     cursor: pointer;
@@ -59,6 +59,7 @@ h2 {
 .forgot-password {
     text-align: center;
     margin-top: 1rem;
+    font-weight: bold;
 
     a {
         color: #333;
@@ -69,6 +70,16 @@ h2 {
             text-decoration: underline;
         }
     }
+}
+
+.error-cloud {
+    background-color: #ffebee;
+    border: 1px solid #ffcdd2;
+    border-radius: 1rem;
+    color: #b71c1c;
+    margin-top: 1rem;
+    padding: 1rem;
+    text-align: center;
 }
 
 @media (max-width: 768px) {

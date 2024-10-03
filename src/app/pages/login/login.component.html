@@ -9,9 +9,9 @@
       <div class="form-group">
         <input type="password" id="password" formControlName="password" placeholder="********" required>
       </div>
-      <button type="submit" class="btn-submit" [disabled]="!loginForm.valid">Entrar</button>
+      <button type="submit" class="btn-submit">Entrar</button>
     </form>
-    <div *ngIf="errorMessage" class="error-message">
+    <div *ngIf="showErrorCloud" class="error-message error-cloud">
       {{ errorMessage }}
     </div>
     <div class="forgot-password">

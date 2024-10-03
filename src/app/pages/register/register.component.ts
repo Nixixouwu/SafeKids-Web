@@ -7,6 +7,7 @@ import { HeaderComponent } from '../../components/header/header.component';
 import { rutValidator } from '../../validators/rut.validator';
 import { RutFormatterDirective } from '../../validators/rut-formatter.validator';
 import { NumbersOnlyDirective } from '../../validators/numbers-only.validator';
+import { FirebaseError } from '@angular/fire/app';
 
 interface College {
   id: string;
@@ -84,12 +85,24 @@ export class RegisterComponent implements OnInit {
     }
 
     const { email, password, terms, ...adminData } = this.registerForm.value;
+
     try {
+      // Attempt to register the admin without checking email existence first
       await this.firebaseService.registerAdmin(email, password, adminData);
       this.router.navigate(['/login']);
     } catch (error) {
       console.error('Registration error:', error);
-      this.errorMessage = 'Error al registrar el administrador. Por favor, inténtelo de nuevo.';
+      if (error instanceof FirebaseError) {
+        switch (error.code) {
+          case 'auth/email-already-in-use':
+            this.errorMessage = 'Este correo electrónico ya está registrado. Por favor, utilice otro.';
+            break;
+          default:
+            this.errorMessage = 'Error al registrar el administrador. Por favor, inténtelo de nuevo.';
+        }
+      } else {
+        this.errorMessage = 'Error al registrar el administrador. Por favor, inténtelo de nuevo.';
+      }
       this.showErrorCloud = true;
     }
   }

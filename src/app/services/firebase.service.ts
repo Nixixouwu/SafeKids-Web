@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Auth, User, user, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword } from '@angular/fire/auth';
 import { Firestore, doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, query, where } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
+import { FirebaseError } from '@angular/fire/app';
 
 interface AdminData {
   Apellido: string;
@@ -104,7 +105,10 @@ export class FirebaseService {
       });
     } catch (error) {
       console.error('Error registering admin:', error);
-      throw error;
+      if (error instanceof FirebaseError && error.code === 'auth/email-already-in-use') {
+        throw error; // Re-throw the Firebase error to be caught in the component
+      }
+      throw new Error('Failed to register admin');
     }
   }
 

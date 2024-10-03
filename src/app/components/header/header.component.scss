@@ -26,18 +26,42 @@ header {
   border-color: #ffd700;
   color: #333;
 
-
-&:hover, &:focus, &:active {
-  background-color: #ffd700;
-  border-color: #ffd700;
-  color: #333;
-}
+  &:hover, &:focus, &:active {
+    background-color: #ffd700;
+    border-color: #ffd700;
+    color: #333;
+  }
 }
 
 .btn-outline-light {
   background-color: white;
   border-color: white;
   color: #333;
+}
+
+// New styles for blue and red buttons
+.btn-blue {
+  background-color: #007bff;
+  border-color: #007bff;
+  color: white;
+
+  &:hover, &:focus, &:active {
+    background-color: #0056b3;
+    border-color: #0056b3;
+    color: white;
+  }
+}
+
+.btn-red {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  color: white;
+
+  &:hover, &:focus, &:active {
+    background-color: #c82333;
+    border-color: #bd2130;
+    color: white;
+  }
 }
 
 // Ensure the mobile menu button is visible
@@ -53,4 +77,13 @@ header {
 // Increase space between buttons if needed
 .btn {
   margin-left: 0.5rem;
+}
+
+.auth-buttons {
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.loading .auth-buttons {
+  opacity: 0;
 }

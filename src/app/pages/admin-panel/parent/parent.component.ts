@@ -2,11 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { FirebaseService, Apoderado, College } from '../../../services/firebase.service';
 import { CommonModule } from '@angular/common';
+import { NumbersOnlyDirective } from '../../../validators/numbers-only.validator';  // Add this import
 
 @Component({
   selector: 'app-parent',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, NumbersOnlyDirective],  // Add NumbersOnlyDirective here
   templateUrl: './parent.component.html',
   styleUrls: ['./parent.component.scss']
 })

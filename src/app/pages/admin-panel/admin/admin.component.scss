@@ -9,7 +9,7 @@ h2 {
     border: none;
     border-radius: 1rem;
     padding: 0.5rem 1rem;
-  } 
+  }
   
   .btn-primary {
     background-color: #333;
@@ -34,7 +34,7 @@ h2 {
     }
   }
   
-  .alumnos-panel {
+  .admins-panel {
     color: #fff;
   }
   
@@ -67,4 +67,23 @@ h2 {
     border: none;
     border-radius: 1rem;
     padding: 0.5rem 1rem;
+    color: #333;
+    width: 100%;
+  }
+  
+  .form-floating > .form-select {
+    padding-top: 1.625rem;
+    padding-bottom: 0.625rem;
+  }
+
+  .form-floating > .form-select ~ label {
+    opacity: .65;
+    transform: scale(.85) translateY(-0.5rem) translateX(0.15rem);
+  }
+
+  .form-select {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 1rem;
+    color: #333;
   }

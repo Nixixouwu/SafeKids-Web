@@ -4,14 +4,15 @@ import { Firestore, doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc,
 import { Observable } from 'rxjs';
 import { FirebaseError } from '@angular/fire/app';
 
-interface AdminData {
-  Apellido: string;
+export interface AdminData {
   Email: string;
-  FK_ADColegio: string;
-  Nombre: string;
-  RUT: string;
   Rol: string;
-  Telefono: string;
+  apellido: string;  // Note the lowercase 'a'
+  fk_adcolegio: string;
+  nombre: string;  // Note the lowercase 'n'
+  rut: string;  // Note the lowercase 'r'
+  telefono: string;
+  id?: string;  // Add this line
 }
 
 export interface College {
@@ -103,6 +104,8 @@ export class FirebaseService {
         Email: email,
         Rol: 'Admin'
       });
+      // Sign out the user immediately after registration
+      await this.auth.signOut();
     } catch (error) {
       console.error('Error registering admin:', error);
       if (error instanceof FirebaseError && error.code === 'auth/email-already-in-use') {
@@ -186,5 +189,48 @@ export class FirebaseService {
     const q = query(adminCollection, where('Email', '==', email));
     const querySnapshot = await getDocs(q);
     return !querySnapshot.empty;
+  }
+
+  async getAdmins(): Promise<AdminData[]> {
+    const adminsCollection = collection(this.firestore, 'Admin');
+    const adminsSnapshot = await getDocs(adminsCollection);
+    return adminsSnapshot.docs.map(doc => ({
+      ...doc.data(),
+      id: doc.id
+    } as AdminData));
+  }
+
+  async addOrUpdateAdmin(adminData: AdminData): Promise<void> {
+    if (!adminData.rut) {
+      throw new Error('RUT is required for admin creation or update');
+    }
+
+    const adminDoc = doc(this.firestore, `Admin/${adminData.rut}`);
+    await setDoc(adminDoc, adminData, { merge: true });
+  }
+
+  async deleteAdmin(email: string): Promise<void> {
+    if (!email) {
+      console.error('Invalid email provided for admin deletion');
+      throw new Error('Invalid email provided for admin deletion');
+    }
+
+    try {
+      const adminQuery = query(collection(this.firestore, 'Admin'), where('Email', '==', email));
+      const querySnapshot = await getDocs(adminQuery);
+      
+      if (querySnapshot.empty) {
+        throw new Error('No admin found with the provided email');
+      }
+
+      const adminDoc = querySnapshot.docs[0];
+      await deleteDoc(adminDoc.ref);
+      
+      console.log('Admin document deleted.');
+      // Note: Deleting the user from Authentication still needs to be handled server-side
+    } catch (error) {
+      console.error('Error deleting admin:', error);
+      throw error;
+    }
   }
 }

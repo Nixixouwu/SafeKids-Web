@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { FirebaseService, Alumno } from '../../../services/firebase.service';
+import { FirebaseService, Alumno, College } from '../../../services/firebase.service';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -13,6 +13,7 @@ import { CommonModule } from '@angular/common';
 export class StudentComponent implements OnInit {
   alumnoForm: FormGroup;
   alumnos: Alumno[] = [];
+  colleges: College[] = [];  // Add this line
 
   constructor(
     private fb: FormBuilder,
@@ -34,10 +35,15 @@ export class StudentComponent implements OnInit {
 
   ngOnInit() {
     this.loadAlumnos();
+    this.loadColleges();  // Add this line
   }
 
   async loadAlumnos() {
     this.alumnos = await this.firebaseService.getAlumnos();
+  }
+
+  async loadColleges() {  // Add this method
+    this.colleges = await this.firebaseService.getColleges();
   }
 
   async onSubmit() {

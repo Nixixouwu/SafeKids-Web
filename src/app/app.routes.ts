@@ -8,6 +8,7 @@ import { CollegesComponent } from './pages/admin-panel/colleges/colleges.compone
 import { ParentComponent } from './pages/admin-panel/parent/parent.component';
 import { StudentComponent } from './pages/admin-panel/student/student.component';
 import { AuthGuard } from './services/auth.guard';
+import { AdminComponent } from './pages/admin-panel/admin/admin.component';  // Make sure this import is correct
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -23,6 +24,7 @@ export const routes: Routes = [
       { path: 'colegios', component: CollegesComponent },
       { path: 'apoderados', component: ParentComponent },
       { path: 'alumnos', component: StudentComponent },
+      { path: 'administradores', component: AdminComponent },
     ]
   }
 ];

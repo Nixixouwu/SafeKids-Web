@@ -20,8 +20,8 @@ export class LoginComponent {
 
   constructor(
     private fb: FormBuilder,
-    private firebaseService: FirebaseService,
-    private router: Router
+    private router: Router,
+    private firebaseService: FirebaseService
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -33,39 +33,31 @@ export class LoginComponent {
     this.showErrorCloud = false;
     this.errorMessage = '';
 
-    if (this.loginForm.invalid) {
+    if (this.loginForm.valid) {
+      try {
+        const { email, password } = this.loginForm.value;
+        await this.firebaseService.signIn(email, password);
+        this.router.navigate(['/panel']);
+      } catch (error) {
+        console.error('Login error:', error);
+        this.handleLoginError(error);
+      }
+    } else {
       this.errorMessage = 'Por favor, complete todos los campos correctamente.';
-      this.showErrorCloud = true;
-      return;
-    }
-
-    const email = this.loginForm.get('email')?.value;
-    const password = this.loginForm.get('password')?.value;
-
-    try {
-      await this.firebaseService.signIn(email, password);
-      this.router.navigate(['/panel']);
-    } catch (error) {
-      console.error('Login error:', error);
-      await this.handleLoginError(error, email);
       this.showErrorCloud = true;
     }
   }
 
-  private async handleLoginError(error: any, email: string) {
+  private handleLoginError(error: any) {
+    this.showErrorCloud = true;
     if (error instanceof FirebaseError) {
       switch (error.code) {
         case 'auth/invalid-credential':
-          // Check if the email exists in the Admin collection
-          const emailExists = await this.firebaseService.checkEmailExists(email);
-          if (emailExists) {
-            this.errorMessage = 'La contraseña es incorrecta.';
-          } else {
-            this.errorMessage = 'El correo electrónico no está registrado en el sistema.';
-          }
+          this.errorMessage = 'Credenciales inválidas. Por favor, verifique su correo electrónico y contraseña.';
           break;
-        case 'auth/user-disabled':
-          this.errorMessage = 'Esta cuenta ha sido deshabilitada.';
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+          this.errorMessage = 'Correo electrónico o contraseña incorrectos. Por favor, inténtelo de nuevo.';
           break;
         case 'auth/too-many-requests':
           this.errorMessage = 'Demasiados intentos fallidos. Por favor, inténtelo más tarde.';

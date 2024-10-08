@@ -4,13 +4,13 @@
     <div class="row g-3">
       <div class="col-md-6">
         <div class="form-floating mb-3">
-          <input type="text" class="form-control" id="nombre" formControlName="Nombre" placeholder="Nombre">
+          <input type="text" class="form-control" id="nombre" formControlName="Nombre" placeholder="Nombre" maxlength="50">
           <label for="nombre">Nombre</label>
         </div>
       </div>
       <div class="col-md-6">
         <div class="form-floating mb-3">
-          <input type="text" class="form-control" id="apellido" formControlName="Apellido" placeholder="Apellido">
+          <input type="text" class="form-control" id="apellido" formControlName="Apellido" placeholder="Apellido" maxlength="50">
           <label for="apellido">Apellido</label>
         </div>
       </div>
@@ -22,20 +22,25 @@
       </div>
       <div class="col-md-6">
         <div class="form-floating mb-3">
-          <input type="email" class="form-control" id="email" formControlName="Email" placeholder="Email">
+          <input type="email" class="form-control" id="email" formControlName="Email" placeholder="Email" maxlength="100">
           <label for="email">Email</label>
         </div>
       </div>
       <div class="col-md-6">
         <div class="form-floating mb-3">
-          <input type="tel" class="form-control" id="telefono" formControlName="Telefono" placeholder="Teléfono">
+          <input type="tel" class="form-control" id="telefono" formControlName="Telefono" placeholder="Teléfono" maxlength="15">
           <label for="telefono">Teléfono</label>
         </div>
       </div>
       <div class="col-md-6">
         <div class="form-floating mb-3">
-          <input type="text" class="form-control" id="fk_apcolegio" formControlName="FK_APColegio" placeholder="ID Colegio">
-          <label for="fk_apcolegio">ID Colegio</label>
+          <select class="form-select" id="fk_apcolegio" formControlName="FK_APColegio">
+            <option value="" disabled selected></option>
+            <option *ngFor="let college of colleges" [value]="college.id">
+              {{ college.Nombre }}
+            </option>
+          </select>
+          <label for="fk_apcolegio">Colegio</label>
         </div>
       </div>
       <div class="col-md-6">

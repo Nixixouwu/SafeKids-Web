@@ -5,13 +5,13 @@
       <div class="row g-3">
         <div class="col-md-6">
           <div class="form-floating mb-3">
-            <input type="text" class="form-control" id="nombre" formControlName="Nombre" placeholder="Nombre">
+            <input type="text" class="form-control" id="nombre" formControlName="Nombre" placeholder="Nombre" maxlength="50">
             <label for="nombre">Nombre</label>
           </div>
         </div>
         <div class="col-md-6">
           <div class="form-floating mb-3">
-            <input type="text" class="form-control" id="apellido" formControlName="Apellido" placeholder="Apellido">
+            <input type="text" class="form-control" id="apellido" formControlName="Apellido" placeholder="Apellido" maxlength="50">
             <label for="apellido">Apellido</label>
           </div>
         </div>
@@ -23,38 +23,47 @@
         </div>
         <div class="col-md-6">
           <div class="form-floating mb-3">
-            <input type="text" class="form-control" id="curso" formControlName="Curso" placeholder="Curso">
+            <input type="text" class="form-control" id="curso" formControlName="Curso" placeholder="Curso" maxlength="2">
             <label for="curso">Curso</label>
           </div>
         </div>
         <div class="col-md-6">
           <div class="form-floating mb-3">
-            <input type="text" class="form-control" id="direccion" formControlName="Direccion" placeholder="Dirección">
+            <input type="text" class="form-control" id="direccion" formControlName="Direccion" placeholder="Dirección" maxlength="100">
             <label for="direccion">Dirección</label>
           </div>
         </div>
         <div class="col-md-6">
           <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="edad" formControlName="Edad" placeholder="Edad">
+            <input type="number" class="form-control" id="edad" formControlName="Edad" placeholder="Edad" min="0" max="99">
             <label for="edad">Edad</label>
           </div>
         </div>
         <div class="col-md-6">
           <div class="form-floating mb-3">
-            <input type="text" class="form-control" id="genero" formControlName="Genero" placeholder="Género">
+            <select class="form-select" id="genero" formControlName="Genero">
+              <option value="" disabled selected></option>
+              <option value="Hombre">Hombre</option>
+              <option value="Mujer">Mujer</option>
+            </select>
             <label for="genero">Género</label>
           </div>
         </div>
         <div class="col-md-6">
           <div class="form-floating mb-3">
-            <input type="text" class="form-control" id="fk_alapoderado" formControlName="FK_ALApoderado" placeholder="ID Apoderado">
-            <label for="fk_alapoderado">ID Apoderado</label>
+            <select class="form-select" id="fk_alapoderado" formControlName="FK_ALApoderado">
+              <option value="" disabled selected></option>
+              <option *ngFor="let apoderado of apoderados" [value]="apoderado.RUT">
+                {{ apoderado.Nombre }} {{ apoderado.Apellido }} ({{ apoderado.RUT }})
+              </option>
+            </select>
+            <label for="fk_alapoderado">Apoderado</label>
           </div>
         </div>
         <div class="col-md-6">
           <div class="form-floating mb-3">
             <select class="form-select" id="fk_alcolegio" formControlName="FK_ALColegio">
-              <option value="">Seleccione un colegio</option>
+              <option value="" disabled selected></option>
               <option *ngFor="let college of colleges" [value]="college.id">
                 {{ college.Nombre }}
               </option>

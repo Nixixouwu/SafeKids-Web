@@ -40,6 +40,7 @@ export interface Alumno {
 }
 
 export interface Apoderado {
+  id?: string;  // Add this line
   Apellido: string;
   Email: string;
   FK_APColegio: string;
@@ -169,9 +170,12 @@ export class FirebaseService {
   }
 
   async getApoderados(): Promise<Apoderado[]> {
-    const apoderadosCollection = collection(this.firestore, 'Apoderado');
-    const apoderadosSnapshot = await getDocs(apoderadosCollection);
-    return apoderadosSnapshot.docs.map(doc => doc.data() as Apoderado);
+    const apoderadosRef = collection(this.firestore, 'Apoderado');
+    const apoderadosSnapshot = await getDocs(apoderadosRef);
+    return apoderadosSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Apoderado));
   }
 
   async addOrUpdateApoderado(apoderadoData: Apoderado): Promise<void> {

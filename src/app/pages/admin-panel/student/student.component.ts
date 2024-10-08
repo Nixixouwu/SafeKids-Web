@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { FirebaseService, Alumno, College } from '../../../services/firebase.service';
+import { FirebaseService, Alumno, College, Apoderado } from '../../../services/firebase.service';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -13,7 +13,8 @@ import { CommonModule } from '@angular/common';
 export class StudentComponent implements OnInit {
   alumnoForm: FormGroup;
   alumnos: Alumno[] = [];
-  colleges: College[] = [];  // Add this line
+  colleges: College[] = [];
+  apoderados: Apoderado[] = [];  // Add this line
 
   constructor(
     private fb: FormBuilder,
@@ -23,7 +24,7 @@ export class StudentComponent implements OnInit {
       Apellido: ['', Validators.required],
       Curso: ['', Validators.required],
       Direccion: ['', Validators.required],
-      Edad: ['', [Validators.required, Validators.min(0)]],
+      Edad: ['', [Validators.required, Validators.min(0), Validators.max(99)]],
       FK_ALApoderado: ['', Validators.required],
       FK_ALColegio: ['', Validators.required],
       Genero: ['', Validators.required],
@@ -35,15 +36,20 @@ export class StudentComponent implements OnInit {
 
   ngOnInit() {
     this.loadAlumnos();
-    this.loadColleges();  // Add this line
+    this.loadColleges();
+    this.loadApoderados();  // Add this line
   }
 
   async loadAlumnos() {
     this.alumnos = await this.firebaseService.getAlumnos();
   }
 
-  async loadColleges() {  // Add this method
+  async loadColleges() {
     this.colleges = await this.firebaseService.getColleges();
+  }
+
+  async loadApoderados() {  // Add this method
+    this.apoderados = await this.firebaseService.getApoderados();
   }
 
   async onSubmit() {

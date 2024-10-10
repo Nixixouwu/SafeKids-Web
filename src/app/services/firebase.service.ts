@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Auth, User, user, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword } from '@angular/fire/auth';
-import { Firestore, doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, query, where } from '@angular/fire/firestore';
+import { Auth, deleteUser, getAuth, signInWithEmailAndPassword, User, createUserWithEmailAndPassword, signOut, user } from '@angular/fire/auth';
+import { Firestore, doc, deleteDoc, collection, query, where, getDocs, getDoc, setDoc, addDoc, updateDoc } from '@angular/fire/firestore';
+import { FirebaseApp, deleteApp, FirebaseError, getApp, initializeApp } from '@angular/fire/app';
 import { Observable } from 'rxjs';
-import { FirebaseError } from '@angular/fire/app';
 
 export interface AdminData {
   Email: string;
@@ -54,10 +54,23 @@ export interface Apoderado {
   providedIn: 'root'
 })
 export class FirebaseService {
+  private adminApp: FirebaseApp | null = null;
+
   constructor(
     private auth: Auth,
     private firestore: Firestore
   ) {}
+
+  private getAdminApp(): FirebaseApp {
+    if (!this.adminApp) {
+      try {
+        this.adminApp = getApp('adminApp');
+      } catch (e) {
+        this.adminApp = initializeApp(getApp().options, 'adminApp');
+      }
+    }
+    return this.adminApp;
+  }
 
   signIn(email: string, password: string) {
     return signInWithEmailAndPassword(this.auth, email, password);
@@ -99,7 +112,7 @@ export class FirebaseService {
     try {
       const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
       const user = userCredential.user;
-      
+
       await setDoc(doc(this.firestore, `Admin/${user.uid}`), {
         ...adminData,
         Email: email,
@@ -113,6 +126,31 @@ export class FirebaseService {
         throw error; // Re-throw the Firebase error to be caught in the component
       }
       throw new Error('Failed to register admin');
+    }
+  }
+
+  async registerAdminFromPanel(email: string, password: string, adminData: Omit<AdminData, 'Email'>): Promise<void> {
+    try {
+      const app = this.getAdminApp();
+      const adminAuth = getAuth(app);
+      
+      // Create the auth account without signing in
+      const userCredential = await createUserWithEmailAndPassword(adminAuth, email, password);
+      const user = userCredential.user;
+
+      // Add the admin data to Firestore
+      const adminCollection = collection(this.firestore, 'Admin');
+      await addDoc(adminCollection, {
+        ...adminData,
+        Email: email,
+        uid: user.uid
+      });
+
+      // Sign out the user from the admin app
+      await adminAuth.signOut();
+    } catch (error) {
+      console.error('Error registering admin:', error);
+      throw error;
     }
   }
 
@@ -213,28 +251,4 @@ export class FirebaseService {
     await setDoc(adminDoc, adminData, { merge: true });
   }
 
-  async deleteAdmin(email: string): Promise<void> {
-    if (!email) {
-      console.error('Invalid email provided for admin deletion');
-      throw new Error('Invalid email provided for admin deletion');
-    }
-
-    try {
-      const adminQuery = query(collection(this.firestore, 'Admin'), where('Email', '==', email));
-      const querySnapshot = await getDocs(adminQuery);
-      
-      if (querySnapshot.empty) {
-        throw new Error('No admin found with the provided email');
-      }
-
-      const adminDoc = querySnapshot.docs[0];
-      await deleteDoc(adminDoc.ref);
-      
-      console.log('Admin document deleted.');
-      // Note: Deleting the user from Authentication still needs to be handled server-side
-    } catch (error) {
-      console.error('Error deleting admin:', error);
-      throw error;
-    }
-  }
 }

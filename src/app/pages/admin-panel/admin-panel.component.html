@@ -23,7 +23,12 @@
         </a>
       </li>
     </ul>
-    <button class="btn btn-outline-danger mt-auto" (click)="logout()">SALIR</button>
+    <div class="mt-auto">
+      <p *ngIf="adminName$ | async as adminName" class="text-light mb-2">
+        Bienvenido, {{ adminName }}
+      </p>
+      <button class="btn btn-outline-danger w-100" (click)="logout()">SALIR</button>
+    </div>
   </nav>
   <main class="main-content flex-grow-1 p-3 d-flex justify-content-center align-items-start">
     <div class="content-container mt-4">

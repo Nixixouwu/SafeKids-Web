@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { FirebaseService, AdminData, College } from '../../../services/firebase.service';
 import { CommonModule } from '@angular/common';
 import { NumbersOnlyDirective } from '../../../validators/numbers-only.validator';  // Add this import
+import { FirebaseError } from '@angular/fire/app';  // Add this import
 
 @Component({
   selector: 'app-admin',
@@ -25,6 +26,7 @@ export class AdminComponent implements OnInit {
       nombre: ['', [Validators.required, Validators.maxLength(20)]],
       apellido: ['', [Validators.required, Validators.maxLength(20)]],
       Email: ['', [Validators.required, Validators.email, Validators.maxLength(50)]],
+      password: ['', [Validators.required, Validators.minLength(6)]], // Add this line
       telefono: ['', [Validators.required, Validators.maxLength(20)]],
       fk_adcolegio: ['', Validators.required],
       Rol: ['Admin', Validators.required]
@@ -48,15 +50,29 @@ export class AdminComponent implements OnInit {
 
   async onSubmit() {
     if (this.adminForm.valid) {
-      const adminData = this.adminForm.value;
+      const { Email, password, ...adminData } = this.adminForm.value; // Update this line
       try {
-        // Assuming you'll add a method to add/update admin in FirebaseService
-        await this.firebaseService.addOrUpdateAdmin(adminData);
+        // Use the password from the form instead of generating a random one
+        await this.firebaseService.registerAdminFromPanel(Email, password, adminData);
+        
         console.log('Admin saved successfully');
         this.adminForm.reset({ Rol: 'Admin' });
         this.loadAdmins();
+        
+        // Success alert removed from here
       } catch (error) {
         console.error('Error submitting admin:', error);
+        if (error instanceof FirebaseError) {
+          switch (error.code) {
+            case 'auth/email-already-in-use':
+              alert('This email is already in use. Please use a different email.');
+              break;
+            default:
+              alert('An error occurred while creating the admin account. Please try again.');
+          }
+        } else {
+          alert('An unexpected error occurred. Please try again.');
+        }
       }
     } else {
       console.log('Form is invalid', this.adminForm.errors);
@@ -73,19 +89,8 @@ export class AdminComponent implements OnInit {
       fk_adcolegio: admin.fk_adcolegio,
       Rol: admin.Rol
     });
-  }
-
-  async deleteAdmin(admin: AdminData) {
-    if (confirm('¿Estás seguro de que quieres eliminar este administrador?')) {
-      try {
-        await this.firebaseService.deleteAdmin(admin.Email);
-        console.log('Admin deleted successfully');
-        this.loadAdmins();
-      } catch (error) {
-        console.error('Error deleting admin:', error);
-        // Handle the error (e.g., show an error message to the user)
-      }
-    }
+    // Clear the password field when editing
+    this.adminForm.get('password')?.setValue('');
   }
 
   getCollegeName(collegeId: string): string {

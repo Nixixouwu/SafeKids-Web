@@ -136,14 +136,12 @@ export class FirebaseService {
       
       // Create the auth account without signing in
       const userCredential = await createUserWithEmailAndPassword(adminAuth, email, password);
-      const user = userCredential.user;
 
-      // Add the admin data to Firestore
-      const adminCollection = collection(this.firestore, 'Admin');
-      await addDoc(adminCollection, {
+      // Add the admin data to Firestore using RUT as the document ID
+      const adminDoc = doc(this.firestore, `Admin/${adminData.rut}`);
+      await setDoc(adminDoc, {
         ...adminData,
-        Email: email,
-        uid: user.uid
+        Email: email
       });
 
       // Sign out the user from the admin app
@@ -238,7 +236,7 @@ export class FirebaseService {
     const adminsSnapshot = await getDocs(adminsCollection);
     return adminsSnapshot.docs.map(doc => ({
       ...doc.data(),
-      id: doc.id
+      id: doc.id // This will now be the RUT
     } as AdminData));
   }
 

@@ -3,8 +3,8 @@
     <a href="/"><h2 class="mb-4">🚌 SAFEKIDS</h2></a>
     <ul class="nav flex-column">
       <li class="nav-item">
-        <a class="nav-link text-light" routerLink="./colegios" routerLinkActive="active">
-          <i class="bi bi-building me-2"></i> Colegios
+        <a class="nav-link text-light" routerLink="./alumnos" routerLinkActive="active">
+          <i class="bi bi-person-badge me-2"></i> Alumnos
         </a>
       </li>
       <li class="nav-item">
@@ -12,16 +12,18 @@
           <i class="bi bi-people-fill me-2"></i> Apoderados
         </a>
       </li>
-      <li class="nav-item">
-        <a class="nav-link text-light" routerLink="./alumnos" routerLinkActive="active">
-          <i class="bi bi-person-badge me-2"></i> Alumnos
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link text-light" routerLink="./administradores" routerLinkActive="active">
-          <i class="bi bi-person me-2"></i> Administradores
-        </a>
-      </li>
+      <ng-container *ngIf="isSuperAdmin$ | async">
+        <li class="nav-item">
+          <a class="nav-link text-light" routerLink="./colegios" routerLinkActive="active">
+            <i class="bi bi-building me-2"></i> Colegios
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-light" routerLink="./administradores" routerLinkActive="active">
+            <i class="bi bi-person me-2"></i> Administradores
+          </a>
+        </li>
+      </ng-container>
     </ul>
     <div class="mt-auto">
       <p *ngIf="adminName$ | async as adminName" class="text-light mb-2">

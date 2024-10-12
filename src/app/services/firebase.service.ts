@@ -13,6 +13,7 @@ export interface AdminData {
   rut: string;  // Note the lowercase 'r'
   telefono: string;
   id?: string;  // Add this line
+  isSuperAdmin?: boolean;  // Add this line
 }
 
 export interface College {
@@ -81,7 +82,9 @@ export class FirebaseService {
   }
 
   getCurrentUser(): Observable<User | null> {
-    return user(this.auth);
+    return new Observable((observer) => {
+      return this.auth.onAuthStateChanged(observer);
+    });
   }
 
   async isUserAdmin(uid: string): Promise<boolean> {
@@ -94,16 +97,19 @@ export class FirebaseService {
     return false;
   }
 
-  async getAdminData(uid: string): Promise<AdminData | null> {
-    try {
-      const adminDocRef = doc(this.firestore, `Admin/${uid}`);
-      const adminDoc = await getDoc(adminDocRef);
-      if (adminDoc.exists()) {
-        return adminDoc.data() as AdminData;
-      }
-      return null;
-    } catch (error) {
-      console.error('Error fetching admin data:', error);
+  async getAdminData(user: User): Promise<AdminData | null> {
+    console.log('Getting admin data for email:', user.email);
+    const adminCollection = collection(this.firestore, 'Admin');
+    const q = query(adminCollection, where('Email', '==', user.email));
+    const querySnapshot = await getDocs(q);
+    
+    if (!querySnapshot.empty) {
+      const adminDoc = querySnapshot.docs[0];
+      const data = adminDoc.data() as AdminData;
+      console.log('Admin data found:', data);
+      return { ...data, id: adminDoc.id, isSuperAdmin: data.isSuperAdmin || false };
+    } else {
+      console.log('No admin data found for email:', user.email);
       return null;
     }
   }
@@ -155,15 +161,7 @@ export class FirebaseService {
   async getColleges(): Promise<College[]> {
     const collegesCollection = collection(this.firestore, 'Colegio');
     const collegesSnapshot = await getDocs(collegesCollection);
-    return collegesSnapshot.docs.map(doc => ({
-      id: doc.id,
-      Direccion: doc.data()['Direccion'],
-      Email: doc.data()['Email'],
-      Encargado: doc.data()['Encargado'],
-      ID: doc.data()['ID'],
-      Nombre: doc.data()['Nombre'],
-      Telefono: doc.data()['Telefono']
-    }));
+    return collegesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as College));
   }
 
   async addCollege(collegeData: Omit<College, 'id'>): Promise<string> {
@@ -206,12 +204,9 @@ export class FirebaseService {
   }
 
   async getApoderados(): Promise<Apoderado[]> {
-    const apoderadosRef = collection(this.firestore, 'Apoderado');
-    const apoderadosSnapshot = await getDocs(apoderadosRef);
-    return apoderadosSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as Apoderado));
+    const apoderadosCollection = collection(this.firestore, 'Apoderado');
+    const apoderadosSnapshot = await getDocs(apoderadosCollection);
+    return apoderadosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Apoderado));
   }
 
   async addOrUpdateApoderado(apoderadoData: Apoderado): Promise<void> {
@@ -246,7 +241,48 @@ export class FirebaseService {
     }
 
     const adminDoc = doc(this.firestore, `Admin/${adminData.rut}`);
-    await setDoc(adminDoc, adminData, { merge: true });
+    await setDoc(adminDoc, {
+      ...adminData,
+      isSuperAdmin: adminData.isSuperAdmin || false
+    }, { merge: true });
+  }
+
+  async getAlumnosByCollege(collegeId: string | null): Promise<Alumno[]> {
+    console.log('Getting alumnos for college ID:', collegeId);
+    const alumnosCollection = collection(this.firestore, 'Alumnos');
+    let q;
+    if (collegeId) {
+      q = query(alumnosCollection, where('FK_ALColegio', '==', collegeId));
+    } else {
+      q = query(alumnosCollection);
+    }
+    const alumnosSnapshot = await getDocs(q);
+    const alumnos = alumnosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Alumno));
+    console.log('Found alumnos:', alumnos);
+    return alumnos;
+  }
+
+  async getCollege(collegeId: string): Promise<College | null> {
+    const collegeDoc = doc(this.firestore, `Colegio/${collegeId}`);
+    const collegeSnapshot = await getDoc(collegeDoc);
+    return collegeSnapshot.exists() ? { id: collegeSnapshot.id, ...collegeSnapshot.data() } as College : null;
+  }
+
+  async getApoderadosByCollege(collegeId: string | null): Promise<Apoderado[]> {
+    const apoderadosCollection = collection(this.firestore, 'Apoderado');
+    let q;
+    if (collegeId) {
+      q = query(apoderadosCollection, where('FK_APColegio', '==', collegeId));
+    } else {
+      q = query(apoderadosCollection);
+    }
+    const apoderadosSnapshot = await getDocs(q);
+    return apoderadosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Apoderado));
+  }
+
+  async addSuperAdmin(adminData: Omit<AdminData, 'id' | 'isSuperAdmin'>): Promise<void> {
+    const adminDocRef = doc(this.firestore, 'Admin', adminData.rut);
+    await setDoc(adminDocRef, { ...adminData, isSuperAdmin: true }, { merge: true });
   }
 
 }

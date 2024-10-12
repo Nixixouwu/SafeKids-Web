@@ -2,20 +2,24 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { FirebaseService, AdminData, College } from '../../../services/firebase.service';
 import { CommonModule } from '@angular/common';
-import { NumbersOnlyDirective } from '../../../validators/numbers-only.validator';  // Add this import
-import { FirebaseError } from '@angular/fire/app';  // Add this import
+import { NumbersOnlyDirective } from '../../../validators/numbers-only.validator';
+import { FirebaseError } from '@angular/fire/app';
+import { Observable, from, of } from 'rxjs';
+import { switchMap, map, catchError } from 'rxjs/operators';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NumbersOnlyDirective],  // Add NumbersOnlyDirective here
+  imports: [CommonModule, ReactiveFormsModule, NumbersOnlyDirective],
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.scss']
 })
 export class AdminComponent implements OnInit {
   adminForm: FormGroup;
   admins: AdminData[] = [];
-  colleges: College[] = [];  // Add this line
+  colleges: College[] = [];
+  isSuperAdmin$: Observable<boolean>;
 
   constructor(
     private fb: FormBuilder,
@@ -26,16 +30,27 @@ export class AdminComponent implements OnInit {
       nombre: ['', [Validators.required, Validators.maxLength(20)]],
       apellido: ['', [Validators.required, Validators.maxLength(20)]],
       Email: ['', [Validators.required, Validators.email, Validators.maxLength(50)]],
-      password: ['', [Validators.required, Validators.minLength(6)]], // Add this line
+      password: ['', [Validators.required, Validators.minLength(6)]],
       telefono: ['', [Validators.required, Validators.maxLength(20)]],
       fk_adcolegio: ['', Validators.required],
-      Rol: ['Admin', Validators.required]
+      Rol: ['Admin', Validators.required],
+      isSuperAdmin: [false]
     });
+
+    // Initialize isSuperAdmin$ observable
+    this.isSuperAdmin$ = this.firebaseService.getCurrentUser().pipe(
+      switchMap(user => user ? from(this.firebaseService.getAdminData(user)) : of(null)),
+      map(adminData => adminData?.isSuperAdmin || false),
+      catchError(error => {
+        console.error('Error fetching admin data:', error);
+        return of(false);
+      })
+    );
   }
 
   ngOnInit() {
     this.loadAdmins();
-    this.loadColleges();  // Add this line
+    this.loadColleges();
   }
 
   async loadAdmins() {
@@ -43,39 +58,21 @@ export class AdminComponent implements OnInit {
     console.log('Loaded admins:', this.admins);
   }
 
-  async loadColleges() {  // Add this method
+  async loadColleges() {
     this.colleges = await this.firebaseService.getColleges();
     console.log('Loaded colleges:', this.colleges);
   }
 
   async onSubmit() {
     if (this.adminForm.valid) {
-      const { Email, password, ...adminData } = this.adminForm.value; // Update this line
       try {
-        // Use the password from the form instead of generating a random one
-        await this.firebaseService.registerAdminFromPanel(Email, password, adminData);
-        
-        console.log('Admin saved successfully');
-        this.adminForm.reset({ Rol: 'Admin' });
-        this.loadAdmins();
-        
-        // Success alert removed from here
+        await this.firebaseService.addOrUpdateAdmin(this.adminForm.value);
+        alert('Admin saved successfully');
+        this.adminForm.reset();
       } catch (error) {
-        console.error('Error submitting admin:', error);
-        if (error instanceof FirebaseError) {
-          switch (error.code) {
-            case 'auth/email-already-in-use':
-              alert('This email is already in use. Please use a different email.');
-              break;
-            default:
-              alert('An error occurred while creating the admin account. Please try again.');
-          }
-        } else {
-          alert('An unexpected error occurred. Please try again.');
-        }
+        console.error('Error saving admin:', error);
+        alert('Error saving admin');
       }
-    } else {
-      console.log('Form is invalid', this.adminForm.errors);
     }
   }
 
@@ -96,5 +93,25 @@ export class AdminComponent implements OnInit {
   getCollegeName(collegeId: string): string {
     const college = this.colleges.find(c => c.id === collegeId);
     return college ? college.Nombre : 'N/A';
+  }
+
+  updateOwnCollege(event: Event) {
+    const selectElement = event.target as HTMLSelectElement;
+    const collegeId = selectElement.value;
+    if (collegeId) {
+      this.updateAdminCollege(collegeId);
+    }
+  }
+
+  async updateAdminCollege(collegeId: string) {
+    const currentUser = await firstValueFrom(this.firebaseService.getCurrentUser());
+    if (currentUser) {
+      const adminData = await this.firebaseService.getAdminData(currentUser);
+      if (adminData) {
+        adminData.fk_adcolegio = collegeId;
+        await this.firebaseService.addOrUpdateAdmin(adminData);
+        alert('Your college assignment has been updated.');
+      }
+    }
   }
 }

@@ -1,25 +1,30 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { FirebaseService, Apoderado, College } from '../../../services/firebase.service';
+import { FirebaseService, Apoderado, College, AdminData } from '../../../services/firebase.service';
 import { CommonModule } from '@angular/common';
-import { NumbersOnlyDirective } from '../../../validators/numbers-only.validator';  // Add this import
+import { NumbersOnlyDirective } from '../../../validators/numbers-only.validator';
+import { firstValueFrom, combineLatest, of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import { AdminPanelComponent } from '../admin-panel.component';
 
 @Component({
   selector: 'app-parent',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NumbersOnlyDirective],  // Add NumbersOnlyDirective here
+  imports: [CommonModule, ReactiveFormsModule, NumbersOnlyDirective],
   templateUrl: './parent.component.html',
   styleUrls: ['./parent.component.scss']
 })
 export class ParentComponent implements OnInit {
   apoderadoForm: FormGroup;
   apoderados: Apoderado[] = [];
-  colleges: College[] = [];  // Add this line
+  colleges: College[] = [];
   collegeMap: Map<string, string> = new Map();
+  currentAdminCollege: string | null = null;
 
   constructor(
     private fb: FormBuilder,
-    private firebaseService: FirebaseService
+    private firebaseService: FirebaseService,
+    private adminPanelComponent: AdminPanelComponent
   ) {
     this.apoderadoForm = this.fb.group({
       RUT: ['', [Validators.required, Validators.maxLength(20)]],
@@ -34,17 +39,73 @@ export class ParentComponent implements OnInit {
 
   ngOnInit() {
     this.loadApoderados();
-    this.loadColleges();  // Add this line
+    this.loadColleges();
+  }
+
+  async loadCurrentAdminData() {
+    try {
+      const currentUser = await firstValueFrom(this.firebaseService.getCurrentUser());
+      if (currentUser) {
+        const adminData = await this.firebaseService.getAdminData(currentUser);
+        if (adminData) {
+          this.currentAdminCollege = adminData.fk_adcolegio;
+          console.log('Current admin college:', this.currentAdminCollege);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading current admin data:', error);
+    }
   }
 
   async loadApoderados() {
-    this.apoderados = await this.firebaseService.getApoderados();
+    combineLatest([
+      this.adminPanelComponent.isSuperAdmin$,
+      this.adminPanelComponent.currentAdminCollege$
+    ]).pipe(
+      switchMap(([isSuperAdmin, collegeId]) => {
+        console.log('Is Super Admin:', isSuperAdmin, 'College ID:', collegeId);
+        if (isSuperAdmin) {
+          return this.firebaseService.getApoderados();
+        } else {
+          return collegeId ? this.firebaseService.getApoderadosByCollege(collegeId) : of([]);
+        }
+      })
+    ).subscribe(
+      apoderados => {
+        this.apoderados = apoderados;
+        console.log('Loaded apoderados:', this.apoderados);
+      },
+      error => {
+        console.error('Error loading apoderados:', error);
+        this.apoderados = [];
+      }
+    );
   }
 
   async loadColleges() {
-    this.colleges = await this.firebaseService.getColleges();
-    // Create a map of college IDs to names for easy lookup
-    this.collegeMap = new Map(this.colleges.map(college => [college.id, college.Nombre]));
+    combineLatest([
+      this.adminPanelComponent.isSuperAdmin$,
+      this.adminPanelComponent.currentAdminCollege$
+    ]).pipe(
+      switchMap(([isSuperAdmin, collegeId]) => {
+        console.log('Is Super Admin:', isSuperAdmin, 'College ID:', collegeId);
+        if (isSuperAdmin) {
+          return this.firebaseService.getColleges();
+        } else {
+          return collegeId ? this.firebaseService.getCollege(collegeId).then(college => college ? [college] : []) : of([]);
+        }
+      })
+    ).subscribe(
+      colleges => {
+        this.colleges = colleges;
+        this.collegeMap = new Map(this.colleges.map(college => [college.id, college.Nombre]));
+        console.log('Loaded colleges:', this.colleges);
+      },
+      error => {
+        console.error('Error loading colleges:', error);
+        this.colleges = [];
+      }
+    );
   }
 
   getCollegeName(id: string): string {
@@ -54,6 +115,9 @@ export class ParentComponent implements OnInit {
   async onSubmit() {
     if (this.apoderadoForm.valid) {
       const apoderadoData = this.apoderadoForm.value;
+      if (this.currentAdminCollege) {
+        apoderadoData.FK_APColegio = this.currentAdminCollege;
+      }
       try {
         await this.firebaseService.addOrUpdateApoderado(apoderadoData);
         console.log('Apoderado saved successfully');

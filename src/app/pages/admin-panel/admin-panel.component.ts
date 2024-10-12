@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { FirebaseService } from '../../services/firebase.service';
+import { FirebaseService, AdminData } from '../../services/firebase.service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
 
 @Component({
@@ -15,16 +15,24 @@ import { switchMap, map } from 'rxjs/operators';
 })
 export class AdminPanelComponent implements OnInit {
   adminName$: Observable<string>;
+  isSuperAdmin$: Observable<boolean>;
+  currentAdminCollege$: Observable<string | null>;
 
   constructor(private firebaseService: FirebaseService, private router: Router) {
-    this.adminName$ = this.firebaseService.getCurrentUser().pipe(
-      switchMap(user => {
-        if (user) {
-          return this.firebaseService.getAdminData(user.uid);
-        }
-        return [];
-      }),
+    const adminData$ = this.firebaseService.getCurrentUser().pipe(
+      switchMap(user => user ? this.firebaseService.getAdminData(user) : of(null))
+    );
+
+    this.adminName$ = adminData$.pipe(
       map(adminData => adminData ? `${adminData.nombre} ${adminData.apellido}` : '')
+    );
+
+    this.isSuperAdmin$ = adminData$.pipe(
+      map(adminData => adminData?.isSuperAdmin || false)
+    );
+
+    this.currentAdminCollege$ = adminData$.pipe(
+      map(adminData => adminData?.fk_adcolegio || null)
     );
   }
 

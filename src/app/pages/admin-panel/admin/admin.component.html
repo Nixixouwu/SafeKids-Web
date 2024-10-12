@@ -49,8 +49,18 @@
             <label for="fk_adcolegio">Colegio</label>
           </div>
         </div>
+        <div class="form-check" *ngIf="isSuperAdmin$ | async">
+          <input class="form-check-input" type="checkbox" id="isSuperAdmin" formControlName="isSuperAdmin">
+          <label class="form-check-label" for="isSuperAdmin">
+            Super Admin
+          </label>
+        </div>
       </div>
-      <button type="submit" class="btn btn-primary" [disabled]="!adminForm.valid">Guardar</button>
+      <div class="col-12">
+        <button type="submit" class="btn btn-primary" [disabled]="!adminForm.valid">
+          Guardar
+        </button>
+      </div>
     </form>
   
     <h2 class="mb-4">Lista de Administradores</h2>
@@ -74,7 +84,7 @@
             <td>{{ admin.apellido }}</td>
             <td>{{ admin.Email }}</td>
             <td>{{ admin.telefono }}</td>
-            <td>{{ getCollegeName(admin.fk_adcolegio) }}</td>
+            <td>{{ getCollegeName(admin.fk_adcolegio || '') }}</td>
             <td>
               <button class="btn btn-sm btn-outline-primary me-2" (click)="editAdmin(admin)">Editar</button>
               <button class="btn btn-sm btn-outline-danger">Eliminar</button>
@@ -84,3 +94,13 @@
       </table>
     </div>
   </div>
+
+<div *ngIf="isSuperAdmin$ | async">
+  <h3>Update Your College Assignment</h3>
+  <select (change)="updateOwnCollege($event)">
+    <option value="">Select a college</option>
+    <option *ngFor="let college of colleges" [value]="college.id">
+      {{ college.Nombre }}
+    </option>
+  </select>
+</div>

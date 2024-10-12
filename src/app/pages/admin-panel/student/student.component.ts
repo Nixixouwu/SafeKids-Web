@@ -1,7 +1,11 @@
 import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl } from '@angular/forms';
-import { FirebaseService, Alumno, College, Apoderado } from '../../../services/firebase.service';
+import { FirebaseService, Alumno, College, Apoderado, AdminData } from '../../../services/firebase.service';
 import { CommonModule } from '@angular/common';
+import { firstValueFrom, combineLatest, of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import { AdminPanelComponent } from '../admin-panel.component';
+
 
 @Component({
   selector: 'app-student',
@@ -17,10 +21,12 @@ export class StudentComponent implements OnInit, AfterViewInit {
   apoderados: Apoderado[] = [];
   apoderadoCollegeMap: Map<string, string> = new Map();
   collegeMap: Map<string, string> = new Map();
+  currentAdminCollege: string | null = null;
 
   constructor(
     private fb: FormBuilder,
-    private firebaseService: FirebaseService
+    private firebaseService: FirebaseService,
+    private adminPanelComponent: AdminPanelComponent
   ) {
     this.alumnoForm = this.fb.group({
       Apellido: ['', Validators.required],
@@ -70,25 +76,93 @@ export class StudentComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
-    this.loadAlumnos();
+    combineLatest([
+      this.adminPanelComponent.isSuperAdmin$,
+      this.adminPanelComponent.currentAdminCollege$
+    ]).pipe(
+      switchMap(([isSuperAdmin, collegeId]) => {
+        if (isSuperAdmin) {
+          return this.firebaseService.getAlumnosByCollege(null);
+        } else {
+          return collegeId ? this.firebaseService.getAlumnosByCollege(collegeId) : of([]);
+        }
+      })
+    ).subscribe(alumnos => {
+      this.alumnos = alumnos;
+      console.log('Loaded alumnos:', this.alumnos);
+    });
+
+    // Load other necessary data
     this.loadColleges();
-    this.loadApoderados();  // Add this line
+    this.loadApoderados();
   }
 
   async loadAlumnos() {
-    this.alumnos = await this.firebaseService.getAlumnos();
+    this.adminPanelComponent.currentAdminCollege$.pipe(
+      switchMap(collegeId => {
+        console.log('Loading alumnos for college:', collegeId);
+        return collegeId ? this.firebaseService.getAlumnosByCollege(collegeId) : of([]);
+      })
+    ).subscribe(
+      alumnos => {
+        this.alumnos = alumnos;
+        console.log('Loaded alumnos:', this.alumnos);
+      },
+      error => {
+        console.error('Error loading alumnos:', error);
+        this.alumnos = [];
+      }
+    );
   }
 
   async loadColleges() {
-    this.colleges = await this.firebaseService.getColleges();
-    // Create a map of college IDs to names for easy lookup
-    this.collegeMap = new Map(this.colleges.map(college => [college.id, college.Nombre]));
+    combineLatest([
+      this.adminPanelComponent.isSuperAdmin$,
+      this.adminPanelComponent.currentAdminCollege$
+    ]).pipe(
+      switchMap(([isSuperAdmin, collegeId]) => {
+        if (isSuperAdmin) {
+          return this.firebaseService.getColleges();
+        } else {
+          return collegeId ? this.firebaseService.getCollege(collegeId).then(college => college ? [college] : []) : of([]);
+        }
+      })
+    ).subscribe(
+      colleges => {
+        this.colleges = colleges;
+        this.collegeMap = new Map(this.colleges.map(college => [college.id, college.Nombre]));
+        console.log('Loaded colleges:', this.colleges);
+      },
+      error => {
+        console.error('Error loading colleges:', error);
+        this.colleges = [];
+      }
+    );
   }
 
   async loadApoderados() {
-    this.apoderados = await this.firebaseService.getApoderados();
-    // Create a map of apoderado RUTs to college IDs
-    this.apoderadoCollegeMap = new Map(this.apoderados.map(apoderado => [apoderado.RUT, apoderado.FK_APColegio]));
+    combineLatest([
+      this.adminPanelComponent.isSuperAdmin$,
+      this.adminPanelComponent.currentAdminCollege$
+    ]).pipe(
+      switchMap(([isSuperAdmin, collegeId]) => {
+        if (isSuperAdmin) {
+          return this.firebaseService.getApoderados();
+        } else {
+          return collegeId ? this.firebaseService.getApoderadosByCollege(collegeId) : of([]);
+        }
+      })
+    ).subscribe(
+      apoderados => {
+        this.apoderados = apoderados;
+        this.apoderadoCollegeMap = new Map(this.apoderados.map(apoderado => [apoderado.RUT, apoderado.FK_APColegio]));
+        console.log('Loaded apoderados:', this.apoderados);
+      },
+      error => {
+        console.error('Error loading apoderados:', error);
+        this.apoderados = [];
+      }
+    );
   }
 
   async onSubmit() {

@@ -3,18 +3,27 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { HeaderComponent } from '../../components/header/header.component';
 import { CommonModule } from '@angular/common';
 import { NumbersOnlyDirective } from '../../validators/numbers-only.validator';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 
 @Component({
   selector: 'app-contact',
   standalone: true,
-  imports: [HeaderComponent, ReactiveFormsModule, CommonModule, NumbersOnlyDirective],
+  imports: [
+    HeaderComponent,
+    ReactiveFormsModule,
+    CommonModule,
+    NumbersOnlyDirective,
+    HttpClientModule
+  ],
   templateUrl: './contact.component.html',
   styleUrl: './contact.component.scss'
 })
 export class ContactComponent implements OnInit {
   contactForm!: FormGroup;
+  formSubmitted = false;
+  formError = false;
 
-  constructor(private fb: FormBuilder) {}
+  constructor(private fb: FormBuilder, private http: HttpClient) {}
 
   ngOnInit() {
     this.contactForm = this.fb.group({
@@ -28,8 +37,19 @@ export class ContactComponent implements OnInit {
 
   onSubmit() {
     if (this.contactForm.valid) {
-      console.log(this.contactForm.value);
-      // Here you can add the logic to send the form data
+      const formspreeUrl = 'https://formspree.io/f/movagekg'; // Replace with your Formspree form ID
+      this.http.post(formspreeUrl, this.contactForm.value)
+        .subscribe(
+          response => {
+            console.log('Form submitted successfully', response);
+            this.formSubmitted = true;
+            this.contactForm.reset();
+          },
+          error => {
+            console.error('Error submitting form', error);
+            this.formError = true;
+          }
+        );
     }
   }
 }

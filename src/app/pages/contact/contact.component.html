@@ -6,8 +6,8 @@
       <p>En caso de dudas o solicitudes, escríbenos ingresando tus datos y seleccionando a quién quieres contactar.</p>
       <p>Utiliza las siguientes vías de contacto para contactarte con nuestro soporte, o rellena el formulario para contactarte con alguna institución.</p>
       <ul>
-        <li>E-mail: <a href="mailto:contacto@safekids.com">contacto&#64;safekids.com</a></li>
-        <li>Redes Sociales: <a href="#">&#64;SafeKids</a></li>
+        <li>E-mail: <a href="mailto:contacto@safekids.com">safekidscontacto&#64;gmail.com</a></li>
+        <li>Redes Sociales: <a href="#">&#64;SafeKidsCL</a></li>
         <li>Teléfono: <a href="tel:+56912345671">+569-1234-5671</a></li>
       </ul>
     </div>
@@ -38,6 +38,12 @@
         </div>
         <button type="submit" class="btn btn-primary btn-block" [disabled]="contactForm.invalid">Enviar Mensaje</button>
       </form>
+      <div *ngIf="formSubmitted" class="alert alert-success mt-3">
+        ¡Mensaje enviado con éxito! Gracias por contactarnos.
+      </div>
+      <div *ngIf="formError" class="alert alert-danger mt-3">
+        Hubo un error al enviar el mensaje. Por favor, inténtelo de nuevo más tarde.
+      </div>
     </div>
   </div>
 </div>

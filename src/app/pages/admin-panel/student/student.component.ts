@@ -15,6 +15,8 @@ export class StudentComponent implements OnInit, AfterViewInit {
   alumnos: Alumno[] = [];
   colleges: College[] = [];
   apoderados: Apoderado[] = [];
+  apoderadoCollegeMap: Map<string, string> = new Map();
+  collegeMap: Map<string, string> = new Map();
 
   constructor(
     private fb: FormBuilder,
@@ -31,6 +33,19 @@ export class StudentComponent implements OnInit, AfterViewInit {
       Imagen: [''],
       Nombre: ['', Validators.required],
       RUT: ['', Validators.required]
+    });
+
+    // Add a listener for changes to FK_ALApoderado
+    this.alumnoForm.get('FK_ALApoderado')?.valueChanges.subscribe(apoderadoRUT => {
+      if (apoderadoRUT) {
+        const collegeId = this.apoderadoCollegeMap.get(apoderadoRUT);
+        if (collegeId) {
+          this.alumnoForm.patchValue({ FK_ALColegio: collegeId });
+          this.alumnoForm.get('FK_ALColegio')?.disable();
+        }
+      } else {
+        this.alumnoForm.get('FK_ALColegio')?.enable();
+      }
     });
   }
 
@@ -66,15 +81,19 @@ export class StudentComponent implements OnInit, AfterViewInit {
 
   async loadColleges() {
     this.colleges = await this.firebaseService.getColleges();
+    // Create a map of college IDs to names for easy lookup
+    this.collegeMap = new Map(this.colleges.map(college => [college.id, college.Nombre]));
   }
 
-  async loadApoderados() {  // Add this method
+  async loadApoderados() {
     this.apoderados = await this.firebaseService.getApoderados();
+    // Create a map of apoderado RUTs to college IDs
+    this.apoderadoCollegeMap = new Map(this.apoderados.map(apoderado => [apoderado.RUT, apoderado.FK_APColegio]));
   }
 
   async onSubmit() {
     if (this.alumnoForm.valid) {
-      const alumnoData = this.alumnoForm.value;
+      const alumnoData = this.alumnoForm.getRawValue(); // This gets all values, including disabled fields
       try {
         await this.firebaseService.addOrUpdateAlumno(alumnoData);
         console.log('Alumno saved successfully');
@@ -90,6 +109,12 @@ export class StudentComponent implements OnInit, AfterViewInit {
 
   editAlumno(alumno: Alumno) {
     this.alumnoForm.patchValue(alumno);
+    // Check if the apoderado is set and disable the college field if necessary
+    if (alumno.FK_ALApoderado) {
+      this.alumnoForm.get('FK_ALColegio')?.disable();
+    } else {
+      this.alumnoForm.get('FK_ALColegio')?.enable();
+    }
   }
 
   async deleteAlumno(rut: string) {
@@ -97,5 +122,9 @@ export class StudentComponent implements OnInit, AfterViewInit {
       await this.firebaseService.deleteAlumno(rut);
       this.loadAlumnos();
     }
+  }
+
+  getCollegeName(id: string): string {
+    return this.collegeMap.get(id) || 'Unknown College';
   }
 }

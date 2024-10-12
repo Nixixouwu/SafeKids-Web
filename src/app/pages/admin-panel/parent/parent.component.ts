@@ -15,6 +15,7 @@ export class ParentComponent implements OnInit {
   apoderadoForm: FormGroup;
   apoderados: Apoderado[] = [];
   colleges: College[] = [];  // Add this line
+  collegeMap: Map<string, string> = new Map();
 
   constructor(
     private fb: FormBuilder,
@@ -40,8 +41,14 @@ export class ParentComponent implements OnInit {
     this.apoderados = await this.firebaseService.getApoderados();
   }
 
-  async loadColleges() {  // Add this method
+  async loadColleges() {
     this.colleges = await this.firebaseService.getColleges();
+    // Create a map of college IDs to names for easy lookup
+    this.collegeMap = new Map(this.colleges.map(college => [college.id, college.Nombre]));
+  }
+
+  getCollegeName(id: string): string {
+    return this.collegeMap.get(id) || 'Unknown College';
   }
 
   async onSubmit() {

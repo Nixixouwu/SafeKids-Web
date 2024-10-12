@@ -63,7 +63,7 @@
           <th>Apellido</th>
           <th>Email</th>
           <th>Teléfono</th>
-          <th>ID Colegio</th>
+          <th>Colegio</th>
           <th>Acciones</th>
         </tr>
       </thead>
@@ -74,7 +74,7 @@
           <td>{{ apoderado.Apellido }}</td>
           <td>{{ apoderado.Email }}</td>
           <td>{{ apoderado.Telefono }}</td>
-          <td>{{ apoderado.FK_APColegio }}</td>
+          <td>{{ getCollegeName(apoderado.FK_APColegio) }}</td>
           <td>
             <button class="btn btn-sm btn-outline-primary me-2" (click)="editApoderado(apoderado)">Editar</button>
             <button class="btn btn-sm btn-outline-danger" (click)="deleteApoderado(apoderado.RUT)">Eliminar</button>

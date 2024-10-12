@@ -23,7 +23,7 @@
         </div>
         <div class="col-md-6">
           <div class="form-floating mb-3">
-            <input type="text" class="form-control" id="curso" formControlName="Curso" placeholder="Curso" maxlength="2">
+            <input type="text" class="form-control" id="curso" formControlName="Curso" placeholder="Curso" maxlength="3">
             <label for="curso">Curso</label>
           </div>
         </div>
@@ -92,7 +92,7 @@
             <th>Curso</th>
             <th>Edad</th>
             <th>Género</th>
-            <th>ID Colegio</th>
+            <th>Colegio</th>
             <th>Acciones</th>
           </tr>
         </thead>
@@ -104,7 +104,7 @@
             <td>{{ alumno.Curso }}</td>
             <td>{{ alumno.Edad }}</td>
             <td>{{ alumno.Genero }}</td>
-            <td>{{ alumno.FK_ALColegio|| alumno.FK_ALColegio }}</td>
+            <td>{{ getCollegeName(alumno.FK_ALColegio) }}</td>
             <td>
               <button class="btn btn-sm btn-outline-primary me-2" (click)="editAlumno(alumno)">Editar</button>
               <button class="btn btn-sm btn-outline-danger" (click)="deleteAlumno(alumno.RUT)">Eliminar</button>

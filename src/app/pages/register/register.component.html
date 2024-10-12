@@ -1,7 +1,7 @@
 <app-header></app-header>
 <div class="container-register">
   <div class="form-container">
-    <h2>Crear una Cuenta</h2>
+    <h2>Solicitar Registro</h2>
     <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
       <div class="form-group">
         <label for="rut">RUT</label>
@@ -18,10 +18,6 @@
       <div class="form-group">
         <label for="email">E-mail</label>
         <input type="email" id="email" formControlName="email" placeholder="hello@correo.com" maxlength="100" required>
-      </div>
-      <div class="form-group">
-        <label for="password">Contraseña</label>
-        <input type="password" id="password" formControlName="password" placeholder="********" maxlength="50" required>
       </div>
       <div class="form-group">
         <label for="telefono">Teléfono</label>

@@ -7,11 +7,11 @@ import { HeaderComponent } from '../../components/header/header.component';
 import { rutValidator } from '../../validators/rut.validator';
 import { RutFormatterDirective } from '../../validators/rut-formatter.validator';
 import { NumbersOnlyDirective } from '../../validators/numbers-only.validator';
-import { FirebaseError } from '@angular/fire/app';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 
 interface College {
   id: string;
-  Nombre: string;  // Changed from 'nombre' to 'Nombre'
+  Nombre: string;
 }
 
 @Component({
@@ -19,7 +19,7 @@ interface College {
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HeaderComponent, RutFormatterDirective, NumbersOnlyDirective]
+  imports: [CommonModule, ReactiveFormsModule, HeaderComponent, RutFormatterDirective, NumbersOnlyDirective, HttpClientModule]
 })
 export class RegisterComponent implements OnInit {
   registerForm: FormGroup;
@@ -30,17 +30,17 @@ export class RegisterComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private firebaseService: FirebaseService,
-    private router: Router
+    private router: Router,
+    private http: HttpClient
   ) {
     this.registerForm = this.fb.group({
       rut: ['', [Validators.required, rutValidator()]],
       nombre: ['', Validators.required],
       apellido: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
       telefono: ['', [Validators.required, Validators.pattern('^[0-9]*$')]],
       fk_adcolegio: ['', Validators.required],
-      terms: [false, Validators.requiredTrue] // This ensures the checkbox must be checked
+      terms: [false, Validators.requiredTrue]
     });
   }
 
@@ -69,8 +69,6 @@ export class RegisterComponent implements OnInit {
         this.errorMessage = 'Por favor, ingrese su apellido.';
       } else if (this.registerForm.get('email')?.invalid) {
         this.errorMessage = 'Por favor, ingrese un correo electrónico válido.';
-      } else if (this.registerForm.get('password')?.invalid) {
-        this.errorMessage = 'La contraseña debe tener al menos 6 caracteres.';
       } else if (this.registerForm.get('telefono')?.invalid) {
         this.errorMessage = 'Por favor, ingrese un número de teléfono válido.';
       } else if (this.registerForm.get('fk_adcolegio')?.invalid) {
@@ -84,25 +82,16 @@ export class RegisterComponent implements OnInit {
       return;
     }
 
-    const { email, password, terms, ...adminData } = this.registerForm.value;
+    const formspreeUrl = 'https://formspree.io/f/movagekg'; // Replace with your Formspree form ID
+    const formData = this.registerForm.value;
 
     try {
-      // Attempt to register the admin without checking email existence first
-      await this.firebaseService.registerAdmin(email, password, adminData);
+      const response = await this.http.post(formspreeUrl, formData).toPromise();
+      console.log('Form submitted successfully', response);
       this.router.navigate(['/login']);
     } catch (error) {
-      console.error('Registration error:', error);
-      if (error instanceof FirebaseError) {
-        switch (error.code) {
-          case 'auth/email-already-in-use':
-            this.errorMessage = 'Este correo electrónico ya está registrado. Por favor, utilice otro.';
-            break;
-          default:
-            this.errorMessage = 'Error al registrar el administrador. Por favor, inténtelo de nuevo.';
-        }
-      } else {
-        this.errorMessage = 'Error al registrar el administrador. Por favor, inténtelo de nuevo.';
-      }
+      console.error('Error submitting form:', error);
+      this.errorMessage = 'Error al enviar la solicitud. Por favor, inténtelo de nuevo.';
       this.showErrorCloud = true;
     }
   }

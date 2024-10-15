@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Auth, deleteUser, getAuth, signInWithEmailAndPassword, User, createUserWithEmailAndPassword, signOut, user } from '@angular/fire/auth';
+import { Auth, deleteUser, getAuth, signInWithEmailAndPassword, User, createUserWithEmailAndPassword, signOut, user, updatePassword } from '@angular/fire/auth';
 import { Firestore, doc, deleteDoc, collection, query, where, getDocs, getDoc, setDoc, addDoc, updateDoc } from '@angular/fire/firestore';
 import { FirebaseApp, deleteApp, FirebaseError, getApp, initializeApp } from '@angular/fire/app';
 import { Observable } from 'rxjs';
@@ -14,6 +14,8 @@ export interface AdminData {
   telefono: string;
   id?: string;  // Add this line
   isSuperAdmin?: boolean;  // Add this line
+  password?: string; // Add this line
+  uid?: string; // Add this line to store the Firebase Auth UID
 }
 
 export interface College {
@@ -241,10 +243,61 @@ export class FirebaseService {
     }
 
     const adminDoc = doc(this.firestore, `Admin/${adminData.rut}`);
-    await setDoc(adminDoc, {
-      ...adminData,
-      isSuperAdmin: adminData.isSuperAdmin || false
-    }, { merge: true });
+    const existingAdmin = await getDoc(adminDoc);
+
+    // Get the admin app and auth
+    const app = this.getAdminApp();
+    const adminAuth = getAuth(app);
+
+    if (!existingAdmin.exists()) {
+      // New admin: create auth account and Firestore document
+      try {
+        if (!adminData.password) {
+          throw new Error('Password is required for new admin creation');
+        }
+        // Create auth account
+        const userCredential = await createUserWithEmailAndPassword(adminAuth, adminData.Email, adminData.password);
+        
+        // Save admin data to Firestore
+        const { password, ...adminDataWithoutPassword } = adminData;
+        await setDoc(adminDoc, {
+          ...adminDataWithoutPassword,
+          isSuperAdmin: adminData.isSuperAdmin || false,
+          uid: userCredential.user.uid // Store the auth UID in Firestore
+        });
+
+        console.log('New admin created successfully');
+      } catch (error) {
+        console.error('Error creating new admin:', error);
+        throw error;
+      }
+    } else {
+      // Existing admin: update Firestore document
+      try {
+        const { password, ...adminDataWithoutPassword } = adminData;
+        await updateDoc(adminDoc, {
+          ...adminDataWithoutPassword,
+          isSuperAdmin: adminData.isSuperAdmin || false
+        });
+
+        // If password is provided, update the auth account password
+        if (password) {
+          const adminSnapshot = await getDoc(adminDoc);
+          const existingAdminData = adminSnapshot.data() as AdminData;
+          if (existingAdminData.uid) {
+            // Sign in and update password
+            const userCredential = await signInWithEmailAndPassword(adminAuth, existingAdminData.Email, password);
+            await updatePassword(userCredential.user, password);
+            await signOut(adminAuth);
+          }
+        }
+
+        console.log('Admin updated successfully');
+      } catch (error) {
+        console.error('Error updating admin:', error);
+        throw error;
+      }
+    }
   }
 
   async getAlumnosByCollege(collegeId: string | null): Promise<Alumno[]> {

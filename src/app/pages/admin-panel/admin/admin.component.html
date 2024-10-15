@@ -95,12 +95,3 @@
     </div>
   </div>
 
-<div *ngIf="isSuperAdmin$ | async">
-  <h3>Update Your College Assignment</h3>
-  <select (change)="updateOwnCollege($event)">
-    <option value="">Select a college</option>
-    <option *ngFor="let college of colleges" [value]="college.id">
-      {{ college.Nombre }}
-    </option>
-  </select>
-</div>

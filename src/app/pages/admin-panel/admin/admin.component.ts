@@ -66,9 +66,20 @@ export class AdminComponent implements OnInit {
   async onSubmit() {
     if (this.adminForm.valid) {
       try {
-        await this.firebaseService.addOrUpdateAdmin(this.adminForm.value);
+        const formData = this.adminForm.value;
+        
+        // Only include password if it's a new admin or if the password field is not empty
+        if (!formData.id || formData.password) {
+          await this.firebaseService.addOrUpdateAdmin(formData);
+        } else {
+          // If updating an existing admin without changing the password
+          const { password, ...adminDataWithoutPassword } = formData;
+          await this.firebaseService.addOrUpdateAdmin(adminDataWithoutPassword);
+        }
+        
         alert('Admin saved successfully');
         this.adminForm.reset();
+        this.loadAdmins(); // Refresh the admin list
       } catch (error) {
         console.error('Error saving admin:', error);
         alert('Error saving admin');

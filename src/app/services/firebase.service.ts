@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Auth, deleteUser, getAuth, signInWithEmailAndPassword, User, createUserWithEmailAndPassword, signOut, user, updatePassword, UserCredential, reauthenticateWithCredential, EmailAuthProvider } from '@angular/fire/auth';
-import { Firestore, doc, deleteDoc, collection, query, where, getDocs, getDoc, setDoc, addDoc, updateDoc } from '@angular/fire/firestore';
+import { Firestore, doc, deleteDoc, collection, query, where, getDocs, getDoc, setDoc, addDoc, updateDoc, orderBy, limit } from '@angular/fire/firestore';
 import { FirebaseApp, deleteApp, FirebaseError, getApp, initializeApp } from '@angular/fire/app';
 import { Observable } from 'rxjs';
 import * as admin from 'firebase-admin';
@@ -181,14 +181,54 @@ export class FirebaseService {
     return collegesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as College));
   }
 
-  async addCollege(collegeData: Omit<College, 'id'>): Promise<string> {
+  private generateIdFromName(name: string): string {
+    // Remove special characters, convert to lowercase, and remove spaces
+    let id = name.toLowerCase()
+      .replace(/[áäâà]/g, 'a')
+      .replace(/[éëêè]/g, 'e')
+      .replace(/[íïîì]/g, 'i')
+      .replace(/[óöôò]/g, 'o')
+      .replace(/[úüûù]/g, 'u')
+      .replace(/ñ/g, 'n')
+      .replace(/[^a-z0-9]/g, '') // Remove all non-alphanumeric characters
+      .replace(/\s+/g, '');      // Remove all whitespace
+    
+    // Limit the length to 10 characters
+    id = id.slice(0, 10);
+    
+    return id;
+  }
+
+  private async getNextCollegeId(): Promise<number> {
+    const collegesRef = collection(this.firestore, 'Colegio');
+    const q = query(collegesRef, orderBy('ID', 'desc'), limit(1));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      return 1; // Start with 1 if no colleges exist
+    } else {
+      const highestIdDoc = querySnapshot.docs[0].data() as College;
+      return highestIdDoc['ID'] + 1;
+    }
+  }
+
+  async addCollege(collegeData: Omit<College, 'id' | 'ID'>): Promise<number> {
     try {
-      const collegesCollection = collection(this.firestore, 'Colegio');
-      const docRef = await addDoc(collegesCollection, collegeData);
-      console.log('Document written with ID: ', docRef.id);
-      return docRef.id;
+      const newId = await this.getNextCollegeId();
+      const newCollegeRef = doc(this.firestore, 'Colegio', newId.toString());
+      
+      const newCollege: College = {
+        ...collegeData,
+        id: newId.toString(),
+        ID: newId
+      };
+
+      await setDoc(newCollegeRef, newCollege);
+
+      console.log('New college added with ID:', newId);
+      return newId;
     } catch (e) {
-      console.error('Error adding document: ', e);
+      console.error("Error adding college: ", e);
       throw e;
     }
   }

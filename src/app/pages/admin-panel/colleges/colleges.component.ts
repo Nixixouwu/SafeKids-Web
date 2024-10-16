@@ -20,13 +20,11 @@ export class CollegesComponent implements OnInit {
     private firebaseService: FirebaseService
   ) {
     this.colegioForm = this.fb.group({
-      id: [''],
       Nombre: ['', Validators.required],
       Direccion: ['', Validators.required],
       Email: ['', [Validators.required, Validators.email]],
       Telefono: ['', Validators.required],
-      Encargado: ['', Validators.required],
-      ID: ['', Validators.required]
+      Encargado: ['', Validators.required]
     });
   }
 
@@ -42,16 +40,8 @@ export class CollegesComponent implements OnInit {
     if (this.colegioForm.valid) {
       const colegioData = this.colegioForm.value;
       try {
-        if (colegioData.id) {
-          // Editing existing college
-          await this.firebaseService.updateCollege(colegioData);
-          console.log('College updated successfully');
-        } else {
-          // Creating new college
-          const { id, ...newCollegeData } = colegioData;
-          const newId = await this.firebaseService.addCollege(newCollegeData);
-          console.log('New college added with ID:', newId);
-        }
+        const newId = await this.firebaseService.addCollege(colegioData);
+        console.log('New college added with ID:', newId);
         this.colegioForm.reset();
         this.loadColegios();
       } catch (error) {

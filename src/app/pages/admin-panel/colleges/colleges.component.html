@@ -1,7 +1,6 @@
 <div class="colleges-panel">
     <h2 class="mb-4">Agregar o Editar Colegio</h2>
     <form [formGroup]="colegioForm" (ngSubmit)="onSubmit()" class="mb-5">
-      <input type="hidden" formControlName="id">
       <div class="row g-3">
         <div class="col-md-6">
           <div class="form-floating mb-3">
@@ -31,12 +30,6 @@
           <div class="form-floating mb-3">
             <input type="text" class="form-control" id="encargado" formControlName="Encargado" placeholder="Director" maxlength="50">
             <label for="encargado">Director</label>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="id" formControlName="ID" placeholder="ID del Colegio">
-            <label for="id">ID del Colegio</label>
           </div>
         </div>
       </div>

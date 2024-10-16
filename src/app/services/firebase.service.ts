@@ -3,19 +3,20 @@ import { Auth, deleteUser, getAuth, signInWithEmailAndPassword, User, createUser
 import { Firestore, doc, deleteDoc, collection, query, where, getDocs, getDoc, setDoc, addDoc, updateDoc } from '@angular/fire/firestore';
 import { FirebaseApp, deleteApp, FirebaseError, getApp, initializeApp } from '@angular/fire/app';
 import { Observable } from 'rxjs';
+import * as admin from 'firebase-admin';
 
 export interface AdminData {
   Email: string;
   Rol: string;
-  apellido: string;  // Note the lowercase 'a'
+  apellido: string;
   fk_adcolegio: string;
-  nombre: string;  // Note the lowercase 'n'
-  rut: string;  // Note the lowercase 'r'
+  nombre: string;
+  rut: string;
   telefono: string;
-  id?: string;  // Add this line
-  isSuperAdmin?: boolean;  // Add this line
-  password?: string; // Add this line
-  uid?: string; // Add this line to store the Firebase Auth UID
+  id?: string;
+  isSuperAdmin?: boolean;
+  password?: string;
+  isActive: boolean;
 }
 
 export interface College {
@@ -43,7 +44,7 @@ export interface Alumno {
 }
 
 export interface Apoderado {
-  id?: string;  // Add this line
+  id?: string;
   Apellido: string;
   Email: string;
   FK_APColegio: string;
@@ -75,8 +76,17 @@ export class FirebaseService {
     return this.adminApp;
   }
 
-  signIn(email: string, password: string) {
-    return signInWithEmailAndPassword(this.auth, email, password);
+  async signIn(email: string, password: string) {
+    const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
+    const user = userCredential.user;
+
+    const adminDoc = await this.getAdminByEmail(email);
+    if (!adminDoc || !adminDoc.isActive) {
+      await signOut(this.auth);
+      throw new Error('Admin account is not active');
+    }
+
+    return userCredential;
   }
 
   signOut() {
@@ -233,7 +243,7 @@ export class FirebaseService {
     const adminsSnapshot = await getDocs(adminsCollection);
     return adminsSnapshot.docs.map(doc => ({
       ...doc.data(),
-      id: doc.id // This will now be the RUT
+      id: doc.id
     } as AdminData));
   }
 
@@ -245,7 +255,6 @@ export class FirebaseService {
     const adminDoc = doc(this.firestore, `Admin/${adminData.rut}`);
     const existingAdmin = await getDoc(adminDoc);
 
-    // Get the admin app and auth
     const app = this.getAdminApp();
     const adminAuth = getAuth(app);
 
@@ -255,15 +264,12 @@ export class FirebaseService {
         if (!adminData.password) {
           throw new Error('Password is required for new admin creation');
         }
-        // Create auth account
         const userCredential = await createUserWithEmailAndPassword(adminAuth, adminData.Email, adminData.password);
         
-        // Save admin data to Firestore
         const { password, ...adminDataWithoutPassword } = adminData;
         await setDoc(adminDoc, {
           ...adminDataWithoutPassword,
-          isSuperAdmin: adminData.isSuperAdmin || false,
-          uid: userCredential.user.uid // Store the auth UID in Firestore
+          isActive: true
         });
 
         console.log('New admin created successfully');
@@ -275,21 +281,14 @@ export class FirebaseService {
       // Existing admin: update Firestore document
       try {
         const { password, ...adminDataWithoutPassword } = adminData;
-        await updateDoc(adminDoc, {
-          ...adminDataWithoutPassword,
-          isSuperAdmin: adminData.isSuperAdmin || false
-        });
+        await updateDoc(adminDoc, adminDataWithoutPassword);
 
-        // If password is provided, update the auth account password
         if (password) {
           const adminSnapshot = await getDoc(adminDoc);
           const existingAdminData = adminSnapshot.data() as AdminData;
-          if (existingAdminData.uid) {
-            // Sign in and update password
-            const userCredential = await signInWithEmailAndPassword(adminAuth, existingAdminData.Email, password);
-            await updatePassword(userCredential.user, password);
-            await signOut(adminAuth);
-          }
+          const userCredential = await signInWithEmailAndPassword(adminAuth, existingAdminData.Email, password);
+          await updatePassword(userCredential.user, password);
+          await signOut(adminAuth);
         }
 
         console.log('Admin updated successfully');
@@ -297,6 +296,36 @@ export class FirebaseService {
         console.error('Error updating admin:', error);
         throw error;
       }
+    }
+  }
+
+  async deactivateAdmin(rut: string): Promise<void> {
+    const adminDoc = doc(this.firestore, `Admin/${rut}`);
+    const adminSnapshot = await getDoc(adminDoc);
+
+    if (adminSnapshot.exists()) {
+      await updateDoc(adminDoc, {
+        isActive: false
+      });
+
+      console.log('Admin deactivated successfully');
+    } else {
+      console.log('Admin not found');
+    }
+  }
+
+  async activateAdmin(rut: string): Promise<void> {
+    const adminDoc = doc(this.firestore, `Admin/${rut}`);
+    const adminSnapshot = await getDoc(adminDoc);
+
+    if (adminSnapshot.exists()) {
+      await updateDoc(adminDoc, {
+        isActive: true
+      });
+
+      console.log('Admin activated successfully');
+    } else {
+      console.log('Admin not found');
     }
   }
 
@@ -336,6 +365,108 @@ export class FirebaseService {
   async addSuperAdmin(adminData: Omit<AdminData, 'id' | 'isSuperAdmin'>): Promise<void> {
     const adminDocRef = doc(this.firestore, 'Admin', adminData.rut);
     await setDoc(adminDocRef, { ...adminData, isSuperAdmin: true }, { merge: true });
+  }
+
+  async deleteAdmin(rut: string): Promise<void> {
+    const adminDoc = doc(this.firestore, `Admin/${rut}`);
+    const adminSnapshot = await getDoc(adminDoc);
+
+    if (adminSnapshot.exists()) {
+      const adminData = adminSnapshot.data() as AdminData;
+      
+      // Instead of deleting, mark the admin as deleted
+      await updateDoc(adminDoc, {
+        isDeleted: true,
+        deletedAt: new Date()
+      });
+
+      console.log('Admin marked as deleted successfully');
+    } else {
+      console.log('Admin not found');
+    }
+  }
+
+  async getAdminByEmail(email: string): Promise<AdminData | null> {
+    const adminCollection = collection(this.firestore, 'Admin');
+    const q = query(adminCollection, where('Email', '==', email));
+    const querySnapshot = await getDocs(q);
+    
+    if (!querySnapshot.empty) {
+      const adminDoc = querySnapshot.docs[0];
+      const data = adminDoc.data() as AdminData;
+      return { ...data, id: adminDoc.id };
+    }
+    return null;
+  }
+
+  async getActiveAdmins(): Promise<AdminData[]> {
+    const adminsCollection = collection(this.firestore, 'Admin');
+    const q = query(adminsCollection, where('isActive', '==', true));
+    const adminsSnapshot = await getDocs(q);
+    return adminsSnapshot.docs.map(doc => ({
+      ...doc.data(),
+      id: doc.id
+    } as AdminData));
+  }
+
+  async updateAdmin(adminData: Partial<AdminData>): Promise<void> {
+    if (!adminData.rut) {
+      console.error('RUT is missing in adminData:', adminData);
+      throw new Error('RUT is required for admin update');
+    }
+
+    const adminDoc = doc(this.firestore, `Admin/${adminData.rut}`);
+    try {
+      const updateData = { ...adminData };
+      delete updateData.rut; // Remove rut from the update data
+      await updateDoc(adminDoc, updateData);
+      console.log('Admin updated successfully');
+    } catch (error) {
+      console.error('Error updating admin:', error);
+      throw error;
+    }
+  }
+
+  async updatePassword(email: string, currentPassword: string, newPassword: string): Promise<void> {
+    try {
+      // Sign in the user with their current password
+      const userCredential = await signInWithEmailAndPassword(this.auth, email, currentPassword);
+      
+      // Update the password
+      await updatePassword(userCredential.user, newPassword);
+      
+      console.log('Password updated successfully');
+    } catch (error) {
+      console.error('Error updating password:', error);
+      throw error;
+    }
+  }
+
+  async addAdmin(adminData: AdminData): Promise<void> {
+    if (!adminData.rut || !adminData.password) {
+      throw new Error('RUT and password are required for admin creation');
+    }
+
+    try {
+      // Create user in Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(this.auth, adminData.Email, adminData.password);
+      
+      // Remove password from adminData before storing in Firestore
+      const { password, ...adminDataWithoutPassword } = adminData;
+
+      // Create admin document in Firestore
+      const adminDoc = doc(this.firestore, `Admin/${adminData.rut}`);
+      await setDoc(adminDoc, {
+        ...adminDataWithoutPassword,
+        uid: userCredential.user.uid,
+        isActive: true
+      });
+
+      console.log('New admin created successfully');
+    } catch (error) {
+      console.error('Error creating new admin:', error);
+      throw error;
+    }
   }
 
 }

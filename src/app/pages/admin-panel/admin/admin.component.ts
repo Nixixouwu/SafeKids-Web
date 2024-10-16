@@ -3,10 +3,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { FirebaseService, AdminData, College } from '../../../services/firebase.service';
 import { CommonModule } from '@angular/common';
 import { NumbersOnlyDirective } from '../../../validators/numbers-only.validator';
-import { FirebaseError } from '@angular/fire/app';
-import { Observable, from, of } from 'rxjs';
-import { switchMap, map, catchError } from 'rxjs/operators';
-import { firstValueFrom } from 'rxjs';
+import { Observable, catchError, firstValueFrom, from, map, of, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-admin',
@@ -20,6 +17,9 @@ export class AdminComponent implements OnInit {
   admins: AdminData[] = [];
   colleges: College[] = [];
   isSuperAdmin$: Observable<boolean>;
+  showInactiveAdmins: boolean = false;
+  isEditing: boolean = false;
+  editingAdminId: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -30,7 +30,8 @@ export class AdminComponent implements OnInit {
       nombre: ['', [Validators.required, Validators.maxLength(20)]],
       apellido: ['', [Validators.required, Validators.maxLength(20)]],
       Email: ['', [Validators.required, Validators.email, Validators.maxLength(50)]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
+      currentPassword: [''],
+      newPassword: [''],
       telefono: ['', [Validators.required, Validators.maxLength(20)]],
       fk_adcolegio: ['', Validators.required],
       Rol: ['Admin', Validators.required],
@@ -54,8 +55,22 @@ export class AdminComponent implements OnInit {
   }
 
   async loadAdmins() {
-    this.admins = await this.firebaseService.getAdmins();
+    if (this.showInactiveAdmins) {
+      this.admins = await this.firebaseService.getAdmins();
+    } else {
+      this.admins = await this.firebaseService.getActiveAdmins();
+    }
     console.log('Loaded admins:', this.admins);
+  }
+
+  toggleInactiveAdmins() {
+    this.showInactiveAdmins = !this.showInactiveAdmins;
+    this.loadAdmins();
+  }
+
+  async loadActiveAdmins() {
+    this.admins = await this.firebaseService.getActiveAdmins();
+    console.log('Loaded active admins:', this.admins);
   }
 
   async loadColleges() {
@@ -63,31 +78,9 @@ export class AdminComponent implements OnInit {
     console.log('Loaded colleges:', this.colleges);
   }
 
-  async onSubmit() {
-    if (this.adminForm.valid) {
-      try {
-        const formData = this.adminForm.value;
-        
-        // Only include password if it's a new admin or if the password field is not empty
-        if (!formData.id || formData.password) {
-          await this.firebaseService.addOrUpdateAdmin(formData);
-        } else {
-          // If updating an existing admin without changing the password
-          const { password, ...adminDataWithoutPassword } = formData;
-          await this.firebaseService.addOrUpdateAdmin(adminDataWithoutPassword);
-        }
-        
-        alert('Admin saved successfully');
-        this.adminForm.reset();
-        this.loadAdmins(); // Refresh the admin list
-      } catch (error) {
-        console.error('Error saving admin:', error);
-        alert('Error saving admin');
-      }
-    }
-  }
-
   editAdmin(admin: AdminData) {
+    this.isEditing = true;
+    this.editingAdminId = admin.rut;
     this.adminForm.patchValue({
       rut: admin.rut,
       nombre: admin.nombre,
@@ -95,10 +88,67 @@ export class AdminComponent implements OnInit {
       Email: admin.Email,
       telefono: admin.telefono,
       fk_adcolegio: admin.fk_adcolegio,
-      Rol: admin.Rol
+      Rol: admin.Rol,
+      isSuperAdmin: admin.isSuperAdmin
     });
-    // Clear the password field when editing
-    this.adminForm.get('password')?.setValue('');
+    // Clear the password fields when editing
+    this.adminForm.get('currentPassword')?.setValue('');
+    this.adminForm.get('newPassword')?.setValue('');
+    // Make the RUT field read-only when editing
+    this.adminForm.get('rut')?.disable();
+  }
+
+  cancelEdit() {
+    this.isEditing = false;
+    this.editingAdminId = null;
+    this.adminForm.reset();
+    this.adminForm.get('rut')?.enable();
+  }
+
+  async onSubmit() {
+    if (this.adminForm.valid) {
+      try {
+        const formData = this.adminForm.getRawValue(); // This gets all form values, including disabled fields
+        
+        if (this.isEditing) {
+          // Updating existing admin
+          if (formData.currentPassword && formData.newPassword) {
+            // If new password and current password are provided, update the password
+            await this.firebaseService.updatePassword(formData.Email, formData.currentPassword, formData.newPassword);
+            console.log('Password updated successfully');
+          }
+          delete formData.currentPassword;
+          delete formData.newPassword;
+          await this.firebaseService.updateAdmin(formData);
+          console.log('Admin data updated successfully');
+        } else {
+          // Creating new admin
+          if (!formData.newPassword) {
+            alert('Password is required for new admin creation');
+            return;
+          }
+          formData.password = formData.newPassword;
+          delete formData.currentPassword;
+          delete formData.newPassword;
+          await this.firebaseService.addAdmin(formData);
+          console.log('New admin created successfully');
+        }
+        
+        this.adminForm.reset();
+        this.isEditing = false;
+        this.editingAdminId = null;
+        this.adminForm.get('rut')?.enable();
+        this.loadAdmins();
+        alert('Admin saved successfully');
+      } catch (error) {
+        console.error('Error saving admin:', error);
+        if (error instanceof Error) {
+          alert(`Error saving admin: ${error.message}`);
+        } else {
+          alert('An unexpected error occurred while saving the admin.');
+        }
+      }
+    }
   }
 
   getCollegeName(collegeId: string): string {
@@ -122,6 +172,32 @@ export class AdminComponent implements OnInit {
         adminData.fk_adcolegio = collegeId;
         await this.firebaseService.addOrUpdateAdmin(adminData);
         alert('Your college assignment has been updated.');
+      }
+    }
+  }
+
+  async deactivateAdmin(admin: AdminData) {
+    if (confirm(`Are you sure you want to deactivate ${admin.nombre} ${admin.apellido}?`)) {
+      try {
+        await this.firebaseService.deactivateAdmin(admin.rut);
+        alert('Admin deactivated successfully');
+        this.loadAdmins(); // This will now load only active admins by default
+      } catch (error) {
+        console.error('Error deactivating admin:', error);
+        alert('Error deactivating admin');
+      }
+    }
+  }
+
+  async activateAdmin(admin: AdminData) {
+    if (confirm(`Are you sure you want to activate ${admin.nombre} ${admin.apellido}?`)) {
+      try {
+        await this.firebaseService.activateAdmin(admin.rut);
+        alert('Admin activated successfully');
+        this.loadAdmins(); // This will now load only active admins by default
+      } catch (error) {
+        console.error('Error activating admin:', error);
+        alert('Error activating admin');
       }
     }
   }

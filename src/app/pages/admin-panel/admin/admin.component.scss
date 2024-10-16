@@ -131,3 +131,28 @@ h2 {
     margin-bottom: .125rem;
     font-weight: bold;
   }
+
+  .btn-secondary {
+    background-color: #333;
+    color: white;
+    font-weight: bold;
+    width: 30%;
+    
+    &:hover, &:focus {
+      background-color: #333;
+      border-color: #333;
+      color: white;
+    }
+  }
+
+  .btn-outline-success {
+    color: #28a745;
+    border-color: #28a745;
+    margin: 0.2rem;
+    
+    &:hover, &:focus {
+      color: white;
+      background-color: #28a745;
+      border-color: #28a745;
+    }
+  }

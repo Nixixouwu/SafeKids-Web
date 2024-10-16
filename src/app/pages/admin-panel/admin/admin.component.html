@@ -1,5 +1,5 @@
 <div class="admins-panel">
-    <h2 class="mb-4">Agregar o Editar Administrador</h2>
+    <h2 class="mb-4">{{ isEditing ? 'Editar' : 'Agregar' }} Administrador</h2>
     <form [formGroup]="adminForm" (ngSubmit)="onSubmit()" class="mb-5">
       <div class="row g-3">
         <div class="col-md-6">
@@ -55,15 +55,35 @@
             Super Admin
           </label>
         </div>
+        <div class="col-md-6" *ngIf="isEditing">
+          <div class="form-floating mb-3">
+            <input type="password" class="form-control" id="currentPassword" formControlName="currentPassword" placeholder="Contraseña Actual">
+            <label for="currentPassword">Contraseña Actual</label>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-floating mb-3">
+            <input type="password" class="form-control" id="newPassword" formControlName="newPassword" placeholder="{{ isEditing ? 'Nueva Contraseña' : 'Contraseña' }}">
+            <label for="newPassword">{{ isEditing ? 'Nueva Contraseña' : 'Contraseña' }}</label>
+          </div>
+        </div>
       </div>
       <div class="col-12">
-        <button type="submit" class="btn btn-primary" [disabled]="!adminForm.valid">
-          Guardar
+        <button type="submit" class="btn btn-primary me-2" [disabled]="!adminForm.valid">
+          {{ isEditing ? 'Actualizar' : 'Guardar' }}
+        </button>
+        <button type="button" class="btn btn-secondary" *ngIf="isEditing" (click)="cancelEdit()">
+          Cancelar
         </button>
       </div>
     </form>
   
     <h2 class="mb-4">Lista de Administradores</h2>
+    <div class="mb-3">
+      <button class="btn btn-secondary" (click)="toggleInactiveAdmins()">
+        {{ showInactiveAdmins ? 'Ocultar Administradores Inactivos' : 'Mostrar Administradores Inactivos' }}
+      </button>
+    </div>
     <div class="table-responsive">
       <table class="table table-hover">
         <thead class="table-light">
@@ -87,11 +107,11 @@
             <td>{{ getCollegeName(admin.fk_adcolegio || '') }}</td>
             <td>
               <button class="btn btn-sm btn-outline-primary me-2" (click)="editAdmin(admin)">Editar</button>
-              <button class="btn btn-sm btn-outline-danger">Eliminar</button>
+              <button *ngIf="admin.isActive" class="btn btn-sm btn-outline-danger me-2" (click)="deactivateAdmin(admin)">Desactivar</button>
+              <button *ngIf="!admin.isActive" class="btn btn-sm btn-outline-success me-2" (click)="activateAdmin(admin)">Activar</button>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
-

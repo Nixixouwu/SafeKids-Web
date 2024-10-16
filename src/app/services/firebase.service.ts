@@ -448,6 +448,22 @@ export class FirebaseService {
     }
 
     try {
+      // Check if an admin with this RUT already exists
+      const existingAdminQuery = query(collection(this.firestore, 'Admin'), where('rut', '==', adminData.rut));
+      const existingAdminSnapshot = await getDocs(existingAdminQuery);
+
+      if (!existingAdminSnapshot.empty) {
+        throw new Error('An admin with this RUT already exists');
+      }
+
+      // Check if an admin with this email already exists
+      const existingEmailQuery = query(collection(this.firestore, 'Admin'), where('Email', '==', adminData.Email));
+      const existingEmailSnapshot = await getDocs(existingEmailQuery);
+
+      if (!existingEmailSnapshot.empty) {
+        throw new Error('An admin with this email already exists');
+      }
+
       // Create user in Firebase Authentication without signing in
       const userCredential: UserCredential = await this.createUserWithoutSignIn(adminData.Email, adminData.password);
       

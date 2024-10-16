@@ -4,11 +4,13 @@ import { FirebaseService, AdminData, College } from '../../../services/firebase.
 import { CommonModule } from '@angular/common';
 import { NumbersOnlyDirective } from '../../../validators/numbers-only.validator';
 import { Observable, catchError, firstValueFrom, from, map, of, switchMap } from 'rxjs';
+import { rutValidator } from '../../../validators/rut.validator';
+import { RutFormatterDirective } from '../../../validators/rut-formatter.validator';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NumbersOnlyDirective],
+  imports: [CommonModule, ReactiveFormsModule, NumbersOnlyDirective, RutFormatterDirective],
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.scss']
 })
@@ -26,7 +28,7 @@ export class AdminComponent implements OnInit {
     private firebaseService: FirebaseService
   ) {
     this.adminForm = this.fb.group({
-      rut: ['', [Validators.required, Validators.maxLength(20)]],
+      rut: ['', [Validators.required, rutValidator()]],
       nombre: ['', [Validators.required, Validators.maxLength(20)]],
       apellido: ['', [Validators.required, Validators.maxLength(20)]],
       Email: ['', [Validators.required, Validators.email, Validators.maxLength(50)]],
@@ -111,9 +113,14 @@ export class AdminComponent implements OnInit {
   async onSubmit() {
     if (this.adminForm.valid) {
       try {
-        const formData = this.adminForm.getRawValue(); // This gets all form values, including disabled fields
+        const formData = this.adminForm.getRawValue();
         
-        if (this.isEditing) {
+        if (!this.isEditing) {
+          await this.firebaseService.addAdmin(formData);
+          console.log('New admin created successfully');
+          this.adminForm.reset();
+          this.loadAdmins();
+        } else {
           // Updating existing admin
           if (formData.currentPassword && formData.newPassword) {
             // If new password and current password are provided, update the password
@@ -125,16 +132,6 @@ export class AdminComponent implements OnInit {
           delete formData.password;
           await this.firebaseService.updateAdmin(formData);
           console.log('Admin data updated successfully');
-        } else {
-          // Creating new admin
-          if (!formData.password) {
-            alert('Password is required for new admin creation');
-            return;
-          }
-          delete formData.currentPassword;
-          delete formData.newPassword;
-          await this.firebaseService.addAdmin(formData);
-          console.log('New admin created successfully');
         }
         
         this.adminForm.reset();

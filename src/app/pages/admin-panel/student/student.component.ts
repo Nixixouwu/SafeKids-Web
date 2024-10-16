@@ -5,12 +5,14 @@ import { CommonModule } from '@angular/common';
 import { firstValueFrom, combineLatest, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { AdminPanelComponent } from '../admin-panel.component';
-
+import { NumbersOnlyDirective } from '../../../validators/numbers-only.validator';
+import { RutFormatterDirective } from '../../../validators/rut-formatter.validator';
+import { rutValidator } from '../../../validators/rut.validator';
 
 @Component({
   selector: 'app-student',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, NumbersOnlyDirective, RutFormatterDirective],
   templateUrl: './student.component.html',
   styleUrls: ['./student.component.scss']
 })
@@ -38,7 +40,7 @@ export class StudentComponent implements OnInit, AfterViewInit {
       Genero: ['', Validators.required],
       Imagen: [''],
       Nombre: ['', Validators.required],
-      RUT: ['', Validators.required]
+      RUT: ['', [Validators.required, rutValidator()]]
     });
 
     // Add a listener for changes to FK_ALApoderado

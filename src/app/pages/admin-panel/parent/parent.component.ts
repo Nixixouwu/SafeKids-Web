@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { FirebaseService, Apoderado, College, AdminData } from '../../../services/firebase.service';
+import { FirebaseService, Apoderado, College } from '../../../services/firebase.service';
 import { CommonModule } from '@angular/common';
 import { NumbersOnlyDirective } from '../../../validators/numbers-only.validator';
+import { RutFormatterDirective } from '../../../validators/rut-formatter.validator';
+import { rutValidator } from '../../../validators/rut.validator';
 import { firstValueFrom, combineLatest, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { AdminPanelComponent } from '../admin-panel.component';
@@ -10,7 +12,7 @@ import { AdminPanelComponent } from '../admin-panel.component';
 @Component({
   selector: 'app-parent',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NumbersOnlyDirective],
+  imports: [CommonModule, ReactiveFormsModule, NumbersOnlyDirective, RutFormatterDirective],
   templateUrl: './parent.component.html',
   styleUrls: ['./parent.component.scss']
 })
@@ -27,7 +29,7 @@ export class ParentComponent implements OnInit {
     private adminPanelComponent: AdminPanelComponent
   ) {
     this.apoderadoForm = this.fb.group({
-      RUT: ['', [Validators.required, Validators.maxLength(20)]],
+      RUT: ['', [Validators.required, rutValidator()]],
       Nombre: ['', [Validators.required, Validators.maxLength(20)]],
       Apellido: ['', [Validators.required, Validators.maxLength(20)]],
       Email: ['', [Validators.required, Validators.email, Validators.maxLength(50)]],

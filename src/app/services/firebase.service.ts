@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Auth, deleteUser, getAuth, signInWithEmailAndPassword, User, createUserWithEmailAndPassword, signOut, user, updatePassword } from '@angular/fire/auth';
+import { Auth, deleteUser, getAuth, signInWithEmailAndPassword, User, createUserWithEmailAndPassword, signOut, user, updatePassword, UserCredential } from '@angular/fire/auth';
 import { Firestore, doc, deleteDoc, collection, query, where, getDocs, getDoc, setDoc, addDoc, updateDoc } from '@angular/fire/firestore';
 import { FirebaseApp, deleteApp, FirebaseError, getApp, initializeApp } from '@angular/fire/app';
 import { Observable } from 'rxjs';
@@ -448,8 +448,8 @@ export class FirebaseService {
     }
 
     try {
-      // Create user in Firebase Authentication
-      const userCredential = await createUserWithEmailAndPassword(this.auth, adminData.Email, adminData.password);
+      // Create user in Firebase Authentication without signing in
+      const userCredential: UserCredential = await this.createUserWithoutSignIn(adminData.Email, adminData.password);
       
       // Remove password from adminData before storing in Firestore
       const { password, ...adminDataWithoutPassword } = adminData;
@@ -467,6 +467,24 @@ export class FirebaseService {
       console.error('Error creating new admin:', error);
       throw error;
     }
+  }
+
+  private async createUserWithoutSignIn(email: string, password: string): Promise<UserCredential> {
+    // Store the current user
+    const currentUser = this.auth.currentUser;
+
+    // Create the new user
+    const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
+
+    // If there was a user signed in before, sign them back in
+    if (currentUser) {
+      await this.auth.updateCurrentUser(currentUser);
+    } else {
+      // If no user was signed in, sign out the newly created user
+      await this.auth.signOut();
+    }
+
+    return userCredential;
   }
 
 }

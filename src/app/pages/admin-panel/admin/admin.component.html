@@ -76,7 +76,7 @@
         <button type="submit" class="btn btn-primary me-2" [disabled]="!adminForm.valid">
           {{ isEditing ? 'Actualizar' : 'Guardar' }}
         </button>
-        <button type="button" class="btn btn-secondary" *ngIf="isEditing" (click)="cancelEdit()">
+        <button type="button" class="btn btn-secondary-cancel" *ngIf="isEditing" (click)="cancelEdit()">
           Cancelar
         </button>
       </div>
@@ -84,7 +84,7 @@
   
     <h2 class="mb-4">Lista de Administradores</h2>
     <div class="mb-3">
-      <button class="btn btn-secondary" (click)="toggleInactiveAdmins()">
+      <button class="btn btn-secondary-toggle" (click)="toggleInactiveAdmins()">
         {{ showInactiveAdmins ? 'Ocultar Administradores Inactivos' : 'Mostrar Administradores Inactivos' }}
       </button>
     </div>

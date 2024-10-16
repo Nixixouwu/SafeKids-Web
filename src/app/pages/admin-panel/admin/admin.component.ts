@@ -96,8 +96,9 @@ export class AdminComponent implements OnInit {
     this.adminForm.get('password')?.setValue('');
     this.adminForm.get('currentPassword')?.setValue('');
     this.adminForm.get('newPassword')?.setValue('');
-    // Make the RUT field read-only when editing
+    // Make the RUT and Email fields read-only when editing
     this.adminForm.get('rut')?.disable();
+    this.adminForm.get('Email')?.disable();
   }
 
   cancelEdit() {

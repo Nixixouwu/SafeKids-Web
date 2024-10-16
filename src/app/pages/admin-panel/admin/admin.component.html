@@ -26,12 +26,28 @@
             <label for="email">Email</label>
           </div>
         </div>
-        <div class="col-md-6">
-          <div class="form-floating mb-3">
-            <input type="password" class="form-control" id="password" formControlName="password" placeholder="Contraseña" maxlength="100">
-            <label for="password">Contraseña</label>
+        <ng-container *ngIf="!isEditing">
+          <div class="col-md-6">
+            <div class="form-floating mb-3">
+              <input type="password" class="form-control" id="password" formControlName="password" placeholder="Contraseña">
+              <label for="password">Contraseña</label>
+            </div>
           </div>
-        </div>
+        </ng-container>
+        <ng-container *ngIf="isEditing">
+          <div class="col-md-6">
+            <div class="form-floating mb-3">
+              <input type="password" class="form-control" id="currentPassword" formControlName="currentPassword" placeholder="Contraseña Actual">
+              <label for="currentPassword">Contraseña Actual</label>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-floating mb-3">
+              <input type="password" class="form-control" id="newPassword" formControlName="newPassword" placeholder="Nueva Contraseña">
+              <label for="newPassword">Nueva Contraseña</label>
+            </div>
+          </div>
+        </ng-container>
         <div class="col-md-6">
           <div class="form-floating mb-3">
             <input type="tel" class="form-control" id="telefono" formControlName="telefono" placeholder="Teléfono" maxlength="15" appNumbersOnly>
@@ -54,18 +70,6 @@
           <label class="form-check-label" for="isSuperAdmin">
             Super Admin
           </label>
-        </div>
-        <div class="col-md-6" *ngIf="isEditing">
-          <div class="form-floating mb-3">
-            <input type="password" class="form-control" id="currentPassword" formControlName="currentPassword" placeholder="Contraseña Actual">
-            <label for="currentPassword">Contraseña Actual</label>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="form-floating mb-3">
-            <input type="password" class="form-control" id="newPassword" formControlName="newPassword" placeholder="{{ isEditing ? 'Nueva Contraseña' : 'Contraseña' }}">
-            <label for="newPassword">{{ isEditing ? 'Nueva Contraseña' : 'Contraseña' }}</label>
-          </div>
         </div>
       </div>
       <div class="col-12">

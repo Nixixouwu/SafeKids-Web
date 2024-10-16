@@ -30,6 +30,7 @@ export class AdminComponent implements OnInit {
       nombre: ['', [Validators.required, Validators.maxLength(20)]],
       apellido: ['', [Validators.required, Validators.maxLength(20)]],
       Email: ['', [Validators.required, Validators.email, Validators.maxLength(50)]],
+      password: [''],
       currentPassword: [''],
       newPassword: [''],
       telefono: ['', [Validators.required, Validators.maxLength(20)]],
@@ -92,6 +93,7 @@ export class AdminComponent implements OnInit {
       isSuperAdmin: admin.isSuperAdmin
     });
     // Clear the password fields when editing
+    this.adminForm.get('password')?.setValue('');
     this.adminForm.get('currentPassword')?.setValue('');
     this.adminForm.get('newPassword')?.setValue('');
     // Make the RUT field read-only when editing
@@ -119,15 +121,15 @@ export class AdminComponent implements OnInit {
           }
           delete formData.currentPassword;
           delete formData.newPassword;
+          delete formData.password;
           await this.firebaseService.updateAdmin(formData);
           console.log('Admin data updated successfully');
         } else {
           // Creating new admin
-          if (!formData.newPassword) {
+          if (!formData.password) {
             alert('Password is required for new admin creation');
             return;
           }
-          formData.password = formData.newPassword;
           delete formData.currentPassword;
           delete formData.newPassword;
           await this.firebaseService.addAdmin(formData);

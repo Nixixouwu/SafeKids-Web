@@ -35,7 +35,7 @@ export class ParentComponent implements OnInit {
       Email: ['', [Validators.required, Validators.email, Validators.maxLength(50)]],
       Telefono: ['', [Validators.required, Validators.maxLength(20)]],
       FK_APColegio: ['', Validators.required],
-      Imagen: ['', Validators.maxLength(20)]
+      Imagen: ['', Validators.maxLength(200)]
     });
   }
 

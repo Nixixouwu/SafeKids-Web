@@ -1,0 +1,68 @@
+<div class="buses-panel">
+  <h2 class="mb-4">Agregar o Editar Bus</h2>
+  <form [formGroup]="busForm" (ngSubmit)="onSubmit()" class="mb-5">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="form-floating mb-3">
+          <input type="text" class="form-control" id="fk_bucolegio" formControlName="FK_BUColegio" placeholder="FK Colegio" maxlength="50">
+          <label for="fk_bucolegio">FK Colegio</label>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="form-floating mb-3">
+          <input type="text" class="form-control" id="fk_buconductor" formControlName="FK_BUConductor" placeholder="FK Conductor" maxlength="50">
+          <label for="fk_buconductor">FK Conductor</label>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="form-floating mb-3">
+          <input type="text" class="form-control" id="id_placa" formControlName="ID_Placa" placeholder="ID Placa" maxlength="20">
+          <label for="id_placa">ID Placa</label>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="form-floating mb-3">
+          <input type="text" class="form-control" id="imagen" formControlName="Imagen" placeholder="URL de la imagen">
+          <label for="imagen">URL de la imagen</label>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="form-floating mb-3">
+          <input type="text" class="form-control" id="modelo" formControlName="Modelo" placeholder="Modelo" maxlength="50">
+          <label for="modelo">Modelo</label>
+        </div>
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary" [disabled]="!busForm.valid">Guardar</button>
+  </form>
+
+  <h2 class="mb-4">Lista de Buses</h2>
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead class="table-light">
+        <tr>
+          <th>ID Placa</th>
+          <th>Modelo</th>
+          <th>FK Conductor</th>
+          <th>FK Colegio</th>
+          <th>Imagen</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let bus of buses">
+          <td>{{ bus.ID_Placa }}</td>
+          <td>{{ bus.Modelo }}</td>
+          <td>{{ bus.FK_BUConductor }}</td>
+          <td>{{ bus.FK_BUColegio }}</td>
+          <td><img [src]="bus.Imagen" alt="Bus Image" width="50"></td>
+          <td>
+            <button class="btn btn-sm btn-outline-primary me-2" (click)="editBus(bus)">Editar</button>
+            <button class="btn btn-sm btn-outline-danger" (click)="deleteBus(bus.ID_Placa)">Eliminar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+

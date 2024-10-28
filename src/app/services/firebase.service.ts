@@ -5,6 +5,8 @@ import { FirebaseApp, deleteApp, FirebaseError, getApp, initializeApp } from '@a
 import { Observable } from 'rxjs';
 import * as admin from 'firebase-admin';
 
+
+
 export interface AdminData {
   Email: string;
   Rol: string;
@@ -53,6 +55,27 @@ export interface Apoderado {
   Nombre: string;
   RUT: string;
   Telefono: string;
+}
+
+export interface Conductor {
+  RUT: string;
+  Nombre: string;
+  Imagen: string;
+  Fecha_Admision: string;
+  FK_COColegio: string;
+  FK_COBus: string;
+  Apellido: string;
+  Email: string;
+  Edad: number;
+  Direccion: string;
+}
+
+export interface Bus {
+  FK_BUColegio: string;
+  FK_BUConductor: string;
+  ID_Placa: string;
+  Imagen: string;
+  Modelo: string;
 }
 
 @Injectable({
@@ -581,4 +604,64 @@ export class FirebaseService {
     return userCredential;
   }
 
+  async deleteConductor(rut: string): Promise<void> {
+    const conductorDoc = doc(this.firestore, `Conductor/${rut}`);
+    await deleteDoc(conductorDoc);
+  }
+
+  async addOrUpdateConductor(conductorData: Conductor) {
+    const docRef = doc(this.firestore, 'Conductor', conductorData.RUT);
+    return setDoc(docRef, conductorData, { merge: true }); // Usa merge: true para actualizar
+  }
+
+  async getConductores(collegeId: string): Promise<Conductor[]> {
+    const conductoresCollection = collection(this.firestore, 'Conductor');
+    const q = query(conductoresCollection, where('FK_COColegio', '==', collegeId));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as Conductor) })); // Ensure all properties of Conductor are included
+  }
+
+  async getConductoresByCollege(collegeId: string): Promise<Conductor[]> {
+    const conductoresCollection = collection(this.firestore, 'Conductor');
+    const q = query(conductoresCollection, where('FK_COColegio', '==', collegeId));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as Conductor) }));
+  }
+
+  // Métodos para manejar buses
+  async getBuses(): Promise<Bus[]> {
+    const busesCollection = collection(this.firestore, 'Bus');
+    const busesSnapshot = await getDocs(busesCollection);
+    return busesSnapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as Bus) }));
+  }
+
+  async addOrUpdateBus(busData: Bus): Promise<void> {
+    const busDocRef = doc(this.firestore, 'Bus', busData.ID_Placa);
+    await setDoc(busDocRef, busData, { merge: true }); // Usa merge: true para actualizar
+  }
+
+  async deleteBus(idPlaca: string): Promise<void> {
+    const busDoc = doc(this.firestore, `Bus/${idPlaca}`);
+    await deleteDoc(busDoc);
+  }
+
+  async getConductor(): Promise<Conductor[]> {
+    const conductoresCollection = collection(this.firestore, 'Conductor');
+    const querySnapshot = await getDocs(conductoresCollection);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as Conductor) }));
+  }
+
+  async addOrUpdateColegio(colegioData: College): Promise<void> {
+    const colegioDocRef = doc(this.firestore, 'Colegio', colegioData.id);
+    await setDoc(colegioDocRef, colegioData, { merge: true }); // Use merge: true to update
+  }
+
 }
+
+
+
+
+
+
+
+

@@ -18,6 +18,9 @@
           <div class="form-floating mb-3">
             <input type="text" class="form-control" id="rut" formControlName="RUT" placeholder="RUT" maxlength="10" appRutFormatter>
             <label for="rut">RUT</label>
+            <small class="text-danger" *ngIf="alumnoForm.get('RUT')?.invalid && alumnoForm.get('RUT')?.touched">
+              RUT inválido.
+            </small>
           </div>
         </div>
         <div class="col-md-6">

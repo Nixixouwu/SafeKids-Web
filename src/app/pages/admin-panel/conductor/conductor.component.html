@@ -75,6 +75,12 @@
           <label for="fechaAdmision">Fecha de Admisión</label>
         </div>
       </div>
+      <div class="col-md-6">
+        <div class="form-floating mb-3">
+          <input type="text" class="form-control" id="imagen" formControlName="Imagen" placeholder="URL de la imagen">
+          <label for="imagen">URL de la imagen</label>
+        </div>
+      </div>
     </div>
     <div class="mt-3">
       <button type="submit" class="btn btn-primary me-2" [disabled]="!conductorForm.valid">
@@ -98,6 +104,7 @@
           <th>Edad</th>
           <th>Dirección</th>
           <th>Colegio</th>
+          <th>Imagen</th>
           <th>Acciones</th>
         </tr>
       </thead>
@@ -110,6 +117,7 @@
           <td>{{ conductor.Edad }}</td>
           <td>{{ conductor.Direccion }}</td>
           <td>{{ getCollegeName(conductor.FK_COColegio) }}</td>
+          <td><img [src]="conductor.Imagen" alt="Conductor Image" width="50" *ngIf="conductor.Imagen"></td>
           <td>
             <button class="btn btn-sm btn-outline-primary me-2" (click)="editConductor(conductor)">Editar</button>
             <button class="btn btn-sm btn-outline-danger" (click)="deleteConductor(conductor.RUT)">Eliminar</button>

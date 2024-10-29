@@ -1,17 +1,27 @@
 <div class="buses-panel">
-  <h2 class="mb-4">Agregar o Editar Bus</h2>
+  <h2 class="mb-4">{{ isEditing ? 'Editar' : 'Agregar' }} Bus</h2>
   <form [formGroup]="busForm" (ngSubmit)="onSubmit()" class="mb-5">
     <div class="row g-3">
       <div class="col-md-6">
         <div class="form-floating mb-3">
-          <input type="text" class="form-control" id="fk_bucolegio" formControlName="FK_BUColegio" placeholder="FK Colegio" maxlength="50">
-          <label for="fk_bucolegio">FK Colegio</label>
+          <select class="form-select" id="fk_bucolegio" formControlName="FK_BUColegio">
+            <option value="" disabled selected></option>
+            <option *ngFor="let college of colleges" [value]="college.id">
+              {{ college.Nombre }}
+            </option>
+          </select>
+          <label for="fk_bucolegio">Colegio</label>
         </div>
       </div>
       <div class="col-md-6">
         <div class="form-floating mb-3">
-          <input type="text" class="form-control" id="fk_buconductor" formControlName="FK_BUConductor" placeholder="FK Conductor" maxlength="50">
-          <label for="fk_buconductor">FK Conductor</label>
+          <select class="form-select" id="fk_buconductor" formControlName="FK_BUConductor">
+            <option value="" disabled selected></option>
+            <option *ngFor="let conductor of conductores" [value]="conductor.RUT">
+              {{ conductor.Nombre }} {{ conductor.Apellido }} ({{ conductor.RUT }})
+            </option>
+          </select>
+          <label for="fk_buconductor">Conductor</label>
         </div>
       </div>
       <div class="col-md-6">
@@ -33,7 +43,14 @@
         </div>
       </div>
     </div>
-    <button type="submit" class="btn btn-primary" [disabled]="!busForm.valid">Guardar</button>
+    <div class="mt-3">
+      <button type="submit" class="btn btn-primary me-2" [disabled]="!busForm.valid">
+        {{ isEditing ? 'Actualizar' : 'Guardar' }}
+      </button>
+      <button *ngIf="isEditing" type="button" class="btn btn-primary me-2 my-2" (click)="resetForm()">
+        Cancelar
+      </button>
+    </div>
   </form>
 
   <h2 class="mb-4">Lista de Buses</h2>
@@ -43,8 +60,8 @@
         <tr>
           <th>ID Placa</th>
           <th>Modelo</th>
-          <th>FK Conductor</th>
-          <th>FK Colegio</th>
+          <th>Conductor</th>
+          <th>Colegio</th>
           <th>Imagen</th>
           <th>Acciones</th>
         </tr>
@@ -53,8 +70,8 @@
         <tr *ngFor="let bus of buses">
           <td>{{ bus.ID_Placa }}</td>
           <td>{{ bus.Modelo }}</td>
-          <td>{{ bus.FK_BUConductor }}</td>
-          <td>{{ bus.FK_BUColegio }}</td>
+          <td>{{ getConductorName(bus.FK_BUConductor) }}</td>
+          <td>{{ getCollegeName(bus.FK_BUColegio) }}</td>
           <td><img [src]="bus.Imagen" alt="Bus Image" width="50"></td>
           <td>
             <button class="btn btn-sm btn-outline-primary me-2" (click)="editBus(bus)">Editar</button>

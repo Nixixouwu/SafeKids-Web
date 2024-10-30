@@ -704,6 +704,13 @@ export class FirebaseService {
     }
   }
 
+  async getBusesByCollege(collegeId: string): Promise<Bus[]> {
+    const busesCollection = collection(this.firestore, 'Bus');
+    const q = query(busesCollection, where('FK_BUColegio', '==', collegeId));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as Bus) }));
+  }
+
 }
 
 

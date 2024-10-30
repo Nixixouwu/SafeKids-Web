@@ -3,6 +3,9 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { FirebaseService, Bus, College, Conductor } from '../../../services/firebase.service';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { combineLatest, of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import { AdminPanelComponent } from '../admin-panel.component';
 
 @Component({
   selector: 'app-bus',
@@ -21,7 +24,11 @@ export class BusComponent implements OnInit {
   isEditing: boolean = false;
   currentBusId: string | null = null;
 
-  constructor(private fb: FormBuilder, private firebaseService: FirebaseService) {
+  constructor(
+    private fb: FormBuilder,
+    private firebaseService: FirebaseService,
+    private adminPanelComponent: AdminPanelComponent
+  ) {
     this.busForm = this.fb.group({
       FK_BUColegio: ['', Validators.required],
       FK_BUConductor: ['', Validators.required],
@@ -38,7 +45,28 @@ export class BusComponent implements OnInit {
   }
 
   async loadBuses() {
-    this.buses = await this.firebaseService.getBuses();
+    combineLatest([
+      this.adminPanelComponent.isSuperAdmin$,
+      this.adminPanelComponent.currentAdminCollege$
+    ]).pipe(
+      switchMap(([isSuperAdmin, collegeId]) => {
+        console.log('Is Super Admin:', isSuperAdmin, 'College ID:', collegeId);
+        if (isSuperAdmin) {
+          return this.firebaseService.getBuses();
+        } else {
+          return collegeId ? this.firebaseService.getBusesByCollege(collegeId) : of([]);
+        }
+      })
+    ).subscribe(
+      buses => {
+        this.buses = buses;
+        console.log('Loaded buses:', this.buses);
+      },
+      error => {
+        console.error('Error loading buses:', error);
+        this.buses = [];
+      }
+    );
   }
 
   async onSubmit() {
@@ -90,32 +118,62 @@ export class BusComponent implements OnInit {
   }
 
   async loadColleges() {
-    try {
-      this.colleges = await this.firebaseService.getColleges();
-      this.collegeMap = new Map(this.colleges.map(college => [college.id, college.Nombre]));
-    } catch (error) {
-      console.error('Error loading colleges:', error);
-      this.colleges = [];
-    }
+    combineLatest([
+      this.adminPanelComponent.isSuperAdmin$,
+      this.adminPanelComponent.currentAdminCollege$
+    ]).pipe(
+      switchMap(([isSuperAdmin, collegeId]) => {
+        console.log('Is Super Admin:', isSuperAdmin, 'College ID:', collegeId);
+        if (isSuperAdmin) {
+          return this.firebaseService.getColleges();
+        } else {
+          return collegeId ? this.firebaseService.getCollege(collegeId).then(college => college ? [college] : []) : of([]);
+        }
+      })
+    ).subscribe(
+      colleges => {
+        this.colleges = colleges;
+        this.collegeMap = new Map(this.colleges.map(college => [college.id, college.Nombre]));
+        console.log('Loaded colleges:', this.colleges);
+      },
+      error => {
+        console.error('Error loading colleges:', error);
+        this.colleges = [];
+      }
+    );
   }
 
   getCollegeName(id: string): string {
     return this.collegeMap.get(id) || 'Unknown College';
   }
 
-  async loadConductores() {
-    try {
-      this.conductores = await this.firebaseService.getConductor();
-      this.conductorMap = new Map(
-        this.conductores.map(conductor => [
-          conductor.RUT,
-          `${conductor.Nombre} ${conductor.Apellido} (${conductor.RUT})`
-        ])
-      );
-    } catch (error) {
-      console.error('Error loading conductores:', error);
-      this.conductores = [];
-    }
+  loadConductores() {
+    combineLatest([
+      this.adminPanelComponent.isSuperAdmin$,
+      this.adminPanelComponent.currentAdminCollege$
+    ]).pipe(
+      switchMap(([isSuperAdmin, collegeId]) => {
+        if (isSuperAdmin) {
+          return this.firebaseService.getConductor();
+        } else {
+          return collegeId ? this.firebaseService.getConductoresByCollege(collegeId) : of([]);
+        }
+      })
+    ).subscribe(
+      conductores => {
+        this.conductores = conductores;
+        this.conductorMap = new Map(
+          this.conductores.map(conductor => [
+            conductor.RUT,
+            `${conductor.Nombre} ${conductor.Apellido} (${conductor.RUT})`
+          ])
+        );
+      },
+      error => {
+        console.error('Error loading conductores:', error);
+        this.conductores = [];
+      }
+    );
   }
 
   getConductorName(rut: string): string {

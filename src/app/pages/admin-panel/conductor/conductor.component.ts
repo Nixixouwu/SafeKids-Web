@@ -27,6 +27,7 @@ export class ConductorComponent implements OnInit {
   conductores: Conductor[] = [];
   colleges: College[] = [];
   collegeMap: Map<string, string> = new Map();
+  currentAdminCollege: string | null = null;
   isEditing: boolean = false;
   currentConductorRut: string | null = null;
 
@@ -55,8 +56,54 @@ export class ConductorComponent implements OnInit {
   }
 
   async loadConductores() {
-    this.conductores = await this.firebaseService.getConductor();
-    console.log('Loaded conductores:', this.conductores);
+    combineLatest([
+      this.adminPanelComponent.isSuperAdmin$,
+      this.adminPanelComponent.currentAdminCollege$
+    ]).pipe(
+      switchMap(([isSuperAdmin, collegeId]) => {
+        console.log('Is Super Admin:', isSuperAdmin, 'College ID:', collegeId);
+        if (isSuperAdmin) {
+          return this.firebaseService.getConductor();
+        } else {
+          return collegeId ? this.firebaseService.getConductoresByCollege(collegeId) : of([]);
+        }
+      })
+    ).subscribe(
+      conductores => {
+        this.conductores = conductores;
+        console.log('Loaded conductores:', this.conductores);
+      },
+      error => {
+        console.error('Error loading conductores:', error);
+        this.conductores = [];
+      }
+    );
+  }
+
+  async loadColleges() {
+    combineLatest([
+      this.adminPanelComponent.isSuperAdmin$,
+      this.adminPanelComponent.currentAdminCollege$
+    ]).pipe(
+      switchMap(([isSuperAdmin, collegeId]) => {
+        console.log('Is Super Admin:', isSuperAdmin, 'College ID:', collegeId);
+        if (isSuperAdmin) {
+          return this.firebaseService.getColleges();
+        } else {
+          return collegeId ? this.firebaseService.getCollege(collegeId).then(college => college ? [college] : []) : of([]);
+        }
+      })
+    ).subscribe(
+      colleges => {
+        this.colleges = colleges;
+        this.collegeMap = new Map(this.colleges.map(college => [college.id, college.Nombre]));
+        console.log('Loaded colleges:', this.colleges);
+      },
+      error => {
+        console.error('Error loading colleges:', error);
+        this.colleges = [];
+      }
+    );
   }
 
   async onSubmit() {
@@ -90,8 +137,6 @@ export class ConductorComponent implements OnInit {
     this.isEditing = true;
     this.currentConductorRut = conductor.RUT;
     this.conductorForm.patchValue(conductor);
-    this.conductorForm.get('RUT')?.disable();
-    this.conductorForm.get('Email')?.disable();
   }
 
   deleteConductor(rut: string) {
@@ -108,31 +153,6 @@ export class ConductorComponent implements OnInit {
     }
   }
 
-  async loadColleges() {
-    combineLatest([
-      this.adminPanelComponent.isSuperAdmin$,
-      this.adminPanelComponent.currentAdminCollege$
-    ]).pipe(
-      switchMap(([isSuperAdmin, collegeId]) => {
-        if (isSuperAdmin) {
-          return this.firebaseService.getColleges();
-        } else {
-          return collegeId ? this.firebaseService.getCollege(collegeId).then(college => college ? [college] : []) : of([]);
-        }
-      })
-    ).subscribe(
-      colleges => {
-        this.colleges = colleges;
-        this.collegeMap = new Map(this.colleges.map(college => [college.id, college.Nombre]));
-        console.log('Loaded colleges:', this.colleges);
-      },
-      error => {
-        console.error('Error loading colleges:', error);
-        this.colleges = [];
-      }
-    );
-  }
-
   getCollegeName(id: string): string {
     return this.collegeMap.get(id) || 'Unknown College';
   }
@@ -141,7 +161,5 @@ export class ConductorComponent implements OnInit {
     this.conductorForm.reset();
     this.isEditing = false;
     this.currentConductorRut = null;
-    this.conductorForm.get('RUT')?.enable();
-    this.conductorForm.get('Email')?.enable();
   }
 }

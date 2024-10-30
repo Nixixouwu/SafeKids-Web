@@ -90,6 +90,8 @@ export class ConductorComponent implements OnInit {
     this.isEditing = true;
     this.currentConductorRut = conductor.RUT;
     this.conductorForm.patchValue(conductor);
+    this.conductorForm.get('RUT')?.disable();
+    this.conductorForm.get('Email')?.disable();
   }
 
   deleteConductor(rut: string) {
@@ -139,5 +141,7 @@ export class ConductorComponent implements OnInit {
     this.conductorForm.reset();
     this.isEditing = false;
     this.currentConductorRut = null;
+    this.conductorForm.get('RUT')?.enable();
+    this.conductorForm.get('Email')?.enable();
   }
 }

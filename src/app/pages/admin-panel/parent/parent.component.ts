@@ -31,13 +31,14 @@ export class ParentComponent implements OnInit {
     private adminPanelComponent: AdminPanelComponent
   ) {
     this.apoderadoForm = this.fb.group({
+      Nombre: ['', Validators.required],
+      Apellido: ['', Validators.required],
       RUT: ['', [Validators.required, rutValidator()]],
-      Nombre: ['', [Validators.required, Validators.maxLength(20)]],
-      Apellido: ['', [Validators.required, Validators.maxLength(20)]],
-      Email: ['', [Validators.required, Validators.email, Validators.maxLength(50)]],
-      Telefono: ['', [Validators.required, Validators.maxLength(20)]],
+      Email: ['', [Validators.required, Validators.email]],
+      Telefono: ['', Validators.required],
       FK_APColegio: ['', Validators.required],
-      Imagen: ['', Validators.maxLength(200)]
+      Imagen: [''],
+      password: ['', [Validators.required, Validators.minLength(6)]]
     });
   }
 
@@ -118,9 +119,9 @@ export class ParentComponent implements OnInit {
 
   async onSubmit() {
     if (this.apoderadoForm.valid) {
-      const apoderadoData = this.apoderadoForm.value;
-      
       try {
+        const apoderadoData = this.apoderadoForm.getRawValue();
+        
         const existingParent = this.apoderados.find(parent => parent.RUT === apoderadoData.RUT);
         
         if (existingParent && !this.isEditing) {
@@ -128,11 +129,21 @@ export class ParentComponent implements OnInit {
           return;
         }
 
-        await this.firebaseService.addOrUpdateApoderado(apoderadoData);
+        if (this.isEditing) {
+          const { password, ...updateData } = apoderadoData;
+          await this.firebaseService.addOrUpdateApoderado(updateData);
+        } else {
+          await this.firebaseService.createParentUser(apoderadoData);
+        }
+
         console.log('Apoderado guardado exitosamente');
         this.apoderadoForm.reset();
         this.isEditing = false;
         this.currentParentRut = null;
+        
+        this.apoderadoForm.get('RUT')?.enable();
+        this.apoderadoForm.get('Email')?.enable();
+        
         this.loadApoderados();
       } catch (error) {
         console.error('Error al guardar el apoderado:', error);
@@ -145,12 +156,24 @@ export class ParentComponent implements OnInit {
     this.isEditing = true;
     this.currentParentRut = apoderado.RUT;
     this.apoderadoForm.patchValue(apoderado);
+    
+    this.apoderadoForm.get('RUT')?.disable();
+    this.apoderadoForm.get('Email')?.disable();
+    
+    this.apoderadoForm.get('password')?.clearValidators();
+    this.apoderadoForm.get('password')?.updateValueAndValidity();
   }
 
   resetForm() {
     this.apoderadoForm.reset();
     this.isEditing = false;
     this.currentParentRut = null;
+    
+    this.apoderadoForm.get('RUT')?.enable();
+    this.apoderadoForm.get('Email')?.enable();
+    
+    this.apoderadoForm.get('password')?.setValidators([Validators.required, Validators.minLength(6)]);
+    this.apoderadoForm.get('password')?.updateValueAndValidity();
   }
 
   async deleteApoderado(rut: string) {

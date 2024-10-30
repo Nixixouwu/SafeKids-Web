@@ -671,6 +671,39 @@ export class FirebaseService {
     }
   }
 
+  async createParentUser(parentData: Apoderado & { password: string }): Promise<void> {
+    try {
+      // Create auth user
+      const app = initializeApp(getApp().options, 'parentCreationApp');
+      const parentAuth = getAuth(app);
+
+      // Create the authentication account
+      const userCredential = await createUserWithEmailAndPassword(
+        parentAuth, 
+        parentData.Email, 
+        parentData.password
+      );
+
+      // Remove password before storing in Firestore
+      const { password, ...parentDataWithoutPassword } = parentData;
+
+      // Store parent data in Firestore using RUT as document ID
+      const parentDoc = doc(this.firestore, `Apoderado/${parentData.RUT}`);
+      await setDoc(parentDoc, {
+        ...parentDataWithoutPassword,
+        uid: userCredential.user.uid  // Store the auth UID for reference
+      });
+
+      // Delete the temporary app
+      await deleteApp(app);
+
+      console.log('Parent user created successfully');
+    } catch (error) {
+      console.error('Error creating parent user:', error);
+      throw error;
+    }
+  }
+
 }
 
 

@@ -72,12 +72,14 @@ export class BusComponent implements OnInit {
     this.isEditing = true;
     this.currentBusId = bus.ID_Placa;
     this.busForm.patchValue(bus);
+    this.busForm.get('ID_Placa')?.disable();
   }
 
   resetForm() {
     this.busForm.reset();
     this.isEditing = false;
     this.currentBusId = null;
+    this.busForm.get('ID_Placa')?.enable();
   }
 
   async deleteBus(idPlaca: string) {

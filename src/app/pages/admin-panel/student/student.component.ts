@@ -198,12 +198,14 @@ export class StudentComponent implements OnInit, AfterViewInit {
     this.isEditing = true;
     this.currentStudentRut = alumno.RUT;
     this.alumnoForm.patchValue(alumno);
+    this.alumnoForm.get('RUT')?.disable();
   }
 
   resetForm() {
     this.alumnoForm.reset();
     this.isEditing = false;
     this.currentStudentRut = null;
+    this.alumnoForm.get('RUT')?.enable();
   }
 
   async deleteAlumno(rut: string) {

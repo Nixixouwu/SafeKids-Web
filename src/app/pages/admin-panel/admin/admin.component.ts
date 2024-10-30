@@ -41,12 +41,10 @@ export class AdminComponent implements OnInit {
       isSuperAdmin: [false]
     });
 
-    // Initialize isSuperAdmin$ observable
     this.isSuperAdmin$ = this.firebaseService.getCurrentUser().pipe(
       switchMap(user => user ? from(this.firebaseService.getAdminData(user)) : of(null)),
       map(adminData => adminData?.isSuperAdmin || false),
       catchError(error => {
-        console.error('Error fetching admin data:', error);
         return of(false);
       })
     );
@@ -63,7 +61,6 @@ export class AdminComponent implements OnInit {
     } else {
       this.admins = await this.firebaseService.getActiveAdmins();
     }
-    console.log('Loaded admins:', this.admins);
   }
 
   toggleInactiveAdmins() {
@@ -73,12 +70,10 @@ export class AdminComponent implements OnInit {
 
   async loadActiveAdmins() {
     this.admins = await this.firebaseService.getActiveAdmins();
-    console.log('Loaded active admins:', this.admins);
   }
 
   async loadColleges() {
     this.colleges = await this.firebaseService.getColleges();
-    console.log('Loaded colleges:', this.colleges);
   }
 
   editAdmin(admin: AdminData) {
@@ -94,11 +89,9 @@ export class AdminComponent implements OnInit {
       Rol: admin.Rol,
       isSuperAdmin: admin.isSuperAdmin
     });
-    // Clear the password fields when editing
     this.adminForm.get('password')?.setValue('');
     this.adminForm.get('currentPassword')?.setValue('');
     this.adminForm.get('newPassword')?.setValue('');
-    // Make the RUT and Email fields read-only when editing
     this.adminForm.get('rut')?.disable();
     this.adminForm.get('Email')?.disable();
   }
@@ -117,21 +110,16 @@ export class AdminComponent implements OnInit {
         
         if (!this.isEditing) {
           await this.firebaseService.addAdmin(formData);
-          console.log('New admin created successfully');
           this.adminForm.reset();
           this.loadAdmins();
         } else {
-          // Updating existing admin
           if (formData.currentPassword && formData.newPassword) {
-            // If new password and current password are provided, update the password
             await this.firebaseService.updatePassword(formData.Email, formData.currentPassword, formData.newPassword);
-            console.log('Password updated successfully');
           }
           delete formData.currentPassword;
           delete formData.newPassword;
           delete formData.password;
           await this.firebaseService.updateAdmin(formData);
-          console.log('Admin data updated successfully');
         }
         
         this.adminForm.reset();
@@ -139,13 +127,12 @@ export class AdminComponent implements OnInit {
         this.editingAdminId = null;
         this.adminForm.get('rut')?.enable();
         this.loadAdmins();
-        alert('Admin saved successfully');
+        alert('Admin guardado exitosamente');
       } catch (error) {
-        console.error('Error saving admin:', error);
         if (error instanceof Error) {
-          alert(`Error saving admin: ${error.message}`);
+          alert(`Error al guardar admin: ${error.message}`);
         } else {
-          alert('An unexpected error occurred while saving the admin.');
+          alert('Ocurrió un error inesperado al guardar el admin.');
         }
       }
     }
@@ -171,33 +158,31 @@ export class AdminComponent implements OnInit {
       if (adminData) {
         adminData.fk_adcolegio = collegeId;
         await this.firebaseService.addOrUpdateAdmin(adminData);
-        alert('Your college assignment has been updated.');
+        alert('Su asignación de colegio ha sido actualizada.');
       }
     }
   }
 
   async deactivateAdmin(admin: AdminData) {
-    if (confirm(`Are you sure you want to deactivate ${admin.nombre} ${admin.apellido}?`)) {
+    if (confirm(`¿Está seguro de que desea desactivar a ${admin.nombre} ${admin.apellido}?`)) {
       try {
         await this.firebaseService.deactivateAdmin(admin.rut);
-        alert('Admin deactivated successfully');
-        this.loadAdmins(); // This will now load only active admins by default
+        alert('Administrador desactivado exitosamente');
+        this.loadAdmins();
       } catch (error) {
-        console.error('Error deactivating admin:', error);
-        alert('Error deactivating admin');
+        alert('Error al desactivar el administrador');
       }
     }
   }
 
   async activateAdmin(admin: AdminData) {
-    if (confirm(`Are you sure you want to activate ${admin.nombre} ${admin.apellido}?`)) {
+    if (confirm(`¿Está seguro de que desea activar a ${admin.nombre} ${admin.apellido}?`)) {
       try {
         await this.firebaseService.activateAdmin(admin.rut);
-        alert('Admin activated successfully');
-        this.loadAdmins(); // This will now load only active admins by default
+        alert('Administrador activado exitosamente');
+        this.loadAdmins();
       } catch (error) {
-        console.error('Error activating admin:', error);
-        alert('Error activating admin');
+        alert('Error al activar el administrador');
       }
     }
   }

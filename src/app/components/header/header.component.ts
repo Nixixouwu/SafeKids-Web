@@ -14,13 +14,13 @@ import { User } from '@angular/fire/auth';
 })
 export class HeaderComponent implements OnInit {
   user$: Observable<User | null>;
-
+// Constructor del componente
   constructor(private firebaseService: FirebaseService) {
     this.user$ = this.firebaseService.getCurrentUser();
   }
-
+// Método para inicializar el componente
   ngOnInit() {}
-
+// Método para cerrar sesión
   logout() {
     this.firebaseService.signOut();
   }

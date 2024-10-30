@@ -3,9 +3,6 @@ import { Auth, deleteUser, getAuth, signInWithEmailAndPassword, User, createUser
 import { Firestore, doc, deleteDoc, collection, query, where, getDocs, getDoc, setDoc, addDoc, updateDoc, orderBy, limit } from '@angular/fire/firestore';
 import { FirebaseApp, deleteApp, FirebaseError, getApp, initializeApp } from '@angular/fire/app';
 import { Observable } from 'rxjs';
-import * as admin from 'firebase-admin';
-
-
 
 export interface AdminData {
   Email: string;
@@ -80,14 +77,15 @@ export interface Bus {
 @Injectable({
   providedIn: 'root'
 })
+//Servicio de Firebase
 export class FirebaseService {
   private adminApp: FirebaseApp | null = null;
-
+  //Constructor del servicio
   constructor(
     private auth: Auth,
     private firestore: Firestore
   ) {}
-
+  //Obtiene la aplicación de administrador
   private getAdminApp(): FirebaseApp {
     if (!this.adminApp) {
       try {
@@ -98,7 +96,7 @@ export class FirebaseService {
     }
     return this.adminApp;
   }
-
+  //Inicia sesión en la aplicación de administrador
   async signIn(email: string, password: string) {
     const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
     const user = userCredential.user;
@@ -111,17 +109,17 @@ export class FirebaseService {
 
     return userCredential;
   }
-
+  //Cierra sesión en la aplicación
   signOut() {
     return signOut(this.auth);
   }
-
+  //Obtiene el usuario actual
   getCurrentUser(): Observable<User | null> {
     return new Observable((observer) => {
       return this.auth.onAuthStateChanged(observer);
     });
   }
-
+  //Verifica si el usuario es administrador
   async isUserAdmin(uid: string): Promise<boolean> {
     const adminDocRef = doc(this.firestore, `Admin/${uid}`);
     const adminDoc = await getDoc(adminDocRef);
@@ -131,9 +129,8 @@ export class FirebaseService {
     }
     return false;
   }
-
+  //Obtiene los datos del administrador
   async getAdminData(user: User): Promise<AdminData | null> {
-    console.log('Getting admin data for email:', user.email);
     const adminCollection = collection(this.firestore, 'Admin');
     const q = query(adminCollection, where('Email', '==', user.email));
     const querySnapshot = await getDocs(q);
@@ -141,18 +138,16 @@ export class FirebaseService {
     if (!querySnapshot.empty) {
       const adminDoc = querySnapshot.docs[0];
       const data = adminDoc.data() as Omit<AdminData, 'rut'>;
-      console.log('Admin data found:', data);
       return {
         ...data,
         rut: adminDoc.id, // Use the document ID as the RUT
         isSuperAdmin: data.isSuperAdmin || false
       };
     } else {
-      console.log('No admin data found for email:', user.email);
       return null;
     }
   }
-
+  //Registra un administrador
   async registerAdmin(email: string, password: string, adminData: Omit<AdminData, 'Email'>): Promise<void> {
     try {
       const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
@@ -166,14 +161,13 @@ export class FirebaseService {
       // Sign out the user immediately after registration
       await this.auth.signOut();
     } catch (error) {
-      console.error('Error registering admin:', error);
       if (error instanceof FirebaseError && error.code === 'auth/email-already-in-use') {
         throw error; // Re-throw the Firebase error to be caught in the component
       }
       throw new Error('Failed to register admin');
     }
   }
-
+  //Registra un administrador desde el panel
   async registerAdminFromPanel(email: string, password: string, adminData: Omit<AdminData, 'Email'>): Promise<void> {
     try {
       const app = this.getAdminApp();
@@ -192,19 +186,19 @@ export class FirebaseService {
       // Sign out the user from the admin app
       await adminAuth.signOut();
     } catch (error) {
-      console.error('Error registering admin:', error);
       throw error;
     }
   }
 
+  //Obtiene los colegios
   async getColleges(): Promise<College[]> {
     const collegesCollection = collection(this.firestore, 'Colegio');
     const collegesSnapshot = await getDocs(collegesCollection);
     return collegesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as College));
   }
-
+  //Genera un ID a partir del nombre
   private generateIdFromName(name: string): string {
-    // Remove special characters, convert to lowercase, and remove spaces
+    //Elimina caracteres especiales, convierte a minúsculas y elimina espacios
     let id = name.toLowerCase()
       .replace(/[áäâà]/g, 'a')
       .replace(/[éëêè]/g, 'e')
@@ -212,28 +206,29 @@ export class FirebaseService {
       .replace(/[óöôò]/g, 'o')
       .replace(/[úüûù]/g, 'u')
       .replace(/ñ/g, 'n')
-      .replace(/[^a-z0-9]/g, '') // Remove all non-alphanumeric characters
-      .replace(/\s+/g, '');      // Remove all whitespace
+      .replace(/[^a-z0-9]/g, '') //Elimina todos los caracteres no alfanuméricos
+      .replace(/\s+/g, '');      //Elimina todos los espacios
     
-    // Limit the length to 10 characters
+    //Limita la longitud a 10 caracteres
     id = id.slice(0, 10);
     
     return id;
   }
-
+  //Obtiene el ID del colegio siguiente
   private async getNextCollegeId(): Promise<number> {
     const collegesRef = collection(this.firestore, 'Colegio');
     const q = query(collegesRef, orderBy('id', 'desc'), limit(1));
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
-      return 1; // Start with 1 if no colleges exist
+      return 1; //Inicia con 1 si no hay colegios
     } else {
       const highestIdDoc = querySnapshot.docs[0].data() as College;
       return parseInt(highestIdDoc.id) + 1;
     }
   }
 
+  //Agrega un colegio
   async addCollege(collegeData: Omit<College, 'id' | 'ID'>): Promise<number> {
     try {
       const newId = await this.getNextCollegeId();
@@ -246,57 +241,64 @@ export class FirebaseService {
 
       await setDoc(newCollegeRef, newCollege);
 
-      console.log('New college added with ID:', newId);
       return newId;
     } catch (e) {
-      console.error("Error adding college: ", e);
       throw e;
     }
   }
 
+  //Actualiza un colegio
   async updateCollege(collegeData: College): Promise<void> {
     const { id, ...updateData } = collegeData;
     const collegeDoc = doc(this.firestore, `Colegio/${id}`);
     await updateDoc(collegeDoc, updateData);
   }
 
+  //Elimina un colegio
   async deleteCollege(id: string): Promise<void> {
     const collegeDoc = doc(this.firestore, `Colegio/${id}`);
     await deleteDoc(collegeDoc);
   }
 
+  //Obtiene los alumnos
   async getAlumnos(): Promise<Alumno[]> {
     const alumnosCollection = collection(this.firestore, 'Alumnos');
     const alumnosSnapshot = await getDocs(alumnosCollection);
     return alumnosSnapshot.docs.map(doc => doc.data() as Alumno);
   }
 
+  //Agrega o actualiza un alumno
   async addOrUpdateAlumno(alumnoData: Alumno): Promise<void> {
     const alumnoDoc = doc(this.firestore, 'Alumnos', alumnoData.RUT);
     await setDoc(alumnoDoc, alumnoData, { merge: true });
   }
 
+  //Elimina un alumno
   async deleteAlumno(rut: string): Promise<void> {
     const alumnoDoc = doc(this.firestore, 'Alumnos', rut);
     await deleteDoc(alumnoDoc);
   }
 
+  //Obtiene los apoderados
   async getApoderados(): Promise<Apoderado[]> {
     const apoderadosCollection = collection(this.firestore, 'Apoderado');
     const apoderadosSnapshot = await getDocs(apoderadosCollection);
     return apoderadosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Apoderado));
   }
 
+  //Agrega o actualiza un apoderado
   async addOrUpdateApoderado(apoderadoData: Apoderado): Promise<void> {
     const apoderadoDoc = doc(this.firestore, 'Apoderado', apoderadoData.RUT);
     await setDoc(apoderadoDoc, apoderadoData, { merge: true });
   }
 
+  //Elimina un apoderado
   async deleteApoderado(rut: string): Promise<void> {
     const apoderadoDoc = doc(this.firestore, 'Apoderado', rut);
     await deleteDoc(apoderadoDoc);
   }
 
+  //Verifica si el email ya existe
   async checkEmailExists(email: string): Promise<boolean> {
     const adminCollection = collection(this.firestore, 'Admin');
     const q = query(adminCollection, where('Email', '==', email));
@@ -304,6 +306,7 @@ export class FirebaseService {
     return !querySnapshot.empty;
   }
 
+  //Obtiene los administradores
   async getAdmins(): Promise<AdminData[]> {
     const adminsCollection = collection(this.firestore, 'Admin');
     const adminsSnapshot = await getDocs(adminsCollection);
@@ -311,11 +314,12 @@ export class FirebaseService {
       const data = doc.data() as Omit<AdminData, 'rut'>;
       return {
         ...data,
-        rut: doc.id // Use the document ID as the RUT
+        rut: doc.id //Usa el ID del documento como RUT
       };
     });
   }
 
+  //Agrega o actualiza un administrador
   async addOrUpdateAdmin(adminData: AdminData): Promise<void> {
     if (!adminData.rut) {
       throw new Error('RUT is required for admin creation or update');
@@ -328,7 +332,7 @@ export class FirebaseService {
     const adminAuth = getAuth(app);
 
     if (!existingAdmin.exists()) {
-      // New admin: create auth account and Firestore document
+      //Nuevo administrador: crea la cuenta de autenticación y el documento en Firestore
       try {
         if (!adminData.password) {
           throw new Error('Password is required for new admin creation');
@@ -341,13 +345,11 @@ export class FirebaseService {
           isActive: true
         });
 
-        console.log('New admin created successfully');
       } catch (error) {
-        console.error('Error creating new admin:', error);
         throw error;
       }
     } else {
-      // Existing admin: update Firestore document
+      //Administrador existente: actualiza el documento en Firestore
       try {
         const { password, ...adminDataWithoutPassword } = adminData;
         await updateDoc(adminDoc, adminDataWithoutPassword);
@@ -360,14 +362,13 @@ export class FirebaseService {
           await signOut(adminAuth);
         }
 
-        console.log('Admin updated successfully');
       } catch (error) {
-        console.error('Error updating admin:', error);
         throw error;
       }
     }
   }
 
+  //Desactiva un administrador
   async deactivateAdmin(rut: string): Promise<void> {
     const adminDoc = doc(this.firestore, `Admin/${rut}`);
     const adminSnapshot = await getDoc(adminDoc);
@@ -377,12 +378,11 @@ export class FirebaseService {
         isActive: false
       });
 
-      console.log('Admin deactivated successfully');
     } else {
-      console.log('Admin not found');
     }
   }
 
+  //Activa un administrador
   async activateAdmin(rut: string): Promise<void> {
     const adminDoc = doc(this.firestore, `Admin/${rut}`);
     const adminSnapshot = await getDoc(adminDoc);
@@ -392,14 +392,12 @@ export class FirebaseService {
         isActive: true
       });
 
-      console.log('Admin activated successfully');
     } else {
-      console.log('Admin not found');
     }
   }
 
+  //Obtiene los alumnos por colegio
   async getAlumnosByCollege(collegeId: string | null): Promise<Alumno[]> {
-    console.log('Getting alumnos for college ID:', collegeId);
     const alumnosCollection = collection(this.firestore, 'Alumnos');
     let q;
     if (collegeId) {
@@ -409,16 +407,17 @@ export class FirebaseService {
     }
     const alumnosSnapshot = await getDocs(q);
     const alumnos = alumnosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Alumno));
-    console.log('Found alumnos:', alumnos);
     return alumnos;
   }
 
+  //Obtiene un colegio
   async getCollege(collegeId: string): Promise<College | null> {
     const collegeDoc = doc(this.firestore, `Colegio/${collegeId}`);
     const collegeSnapshot = await getDoc(collegeDoc);
     return collegeSnapshot.exists() ? { id: collegeSnapshot.id, ...collegeSnapshot.data() } as College : null;
   }
 
+  //Obtiene los apoderados por colegio
   async getApoderadosByCollege(collegeId: string | null): Promise<Apoderado[]> {
     const apoderadosCollection = collection(this.firestore, 'Apoderado');
     let q;
@@ -431,11 +430,13 @@ export class FirebaseService {
     return apoderadosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Apoderado));
   }
 
+  //Agrega un super administrador
   async addSuperAdmin(adminData: Omit<AdminData, 'isSuperAdmin'>): Promise<void> {
     const adminDocRef = doc(this.firestore, 'Admin', adminData.rut);
     await setDoc(adminDocRef, { ...adminData, isSuperAdmin: true }, { merge: true });
   }
 
+  //Elimina un administrador
   async deleteAdmin(rut: string): Promise<void> {
     const adminDoc = doc(this.firestore, `Admin/${rut}`);
     const adminSnapshot = await getDoc(adminDoc);
@@ -443,18 +444,17 @@ export class FirebaseService {
     if (adminSnapshot.exists()) {
       const adminData = adminSnapshot.data() as AdminData;
       
-      // Instead of deleting, mark the admin as deleted
+      //En lugar de eliminar, marca el administrador como eliminado
       await updateDoc(adminDoc, {
         isDeleted: true,
         deletedAt: new Date()
       });
 
-      console.log('Admin marked as deleted successfully');
     } else {
-      console.log('Admin not found');
     }
   }
 
+  //Obtiene un administrador por email
   async getAdminByEmail(email: string): Promise<AdminData | null> {
     const adminCollection = collection(this.firestore, 'Admin');
     const q = query(adminCollection, where('Email', '==', email));
@@ -465,12 +465,13 @@ export class FirebaseService {
       const data = adminDoc.data() as Omit<AdminData, 'rut'>;
       return {
         ...data,
-        rut: adminDoc.id // Use the document ID as the RUT
+        rut: adminDoc.id //Usa el ID del documento como RUT
       };
     }
     return null;
   }
 
+  //Obtiene los administradores activos
   async getActiveAdmins(): Promise<AdminData[]> {
     const adminsCollection = collection(this.firestore, 'Admin');
     const q = query(adminsCollection, where('isActive', '==', true));
@@ -479,11 +480,12 @@ export class FirebaseService {
       const data = doc.data() as Omit<AdminData, 'rut'>;
       return {
         ...data,
-        rut: doc.id // Use the document ID as the RUT
+        rut: doc.id //Usa el ID del documento como RUT
       };
     });
   }
 
+  //Actualiza un administrador
   async updateAdmin(adminData: AdminData): Promise<void> {
     if (!adminData.rut) {
       throw new Error('RUT is required for admin update');
@@ -497,13 +499,13 @@ export class FirebaseService {
         throw new Error('Admin not found');
       }
 
-      // Remove password-related fields from adminData before updating in Firestore
+      //Elimina los campos de contraseña antes de actualizar en Firestore
       const { password, currentPassword, newPassword, ...adminDataToUpdate } = adminData;
 
-      // Update admin document in Firestore
+      //Actualiza el documento del administrador en Firestore
       await updateDoc(adminDoc, adminDataToUpdate);
 
-      // If a new password is provided, update it in Firebase Authentication
+      //Si se proporciona una nueva contraseña, actualiza en Firebase Authentication
       if (newPassword && currentPassword) {
         const user = await this.auth.currentUser;
         if (user) {
@@ -513,35 +515,32 @@ export class FirebaseService {
         }
       }
 
-      console.log('Admin updated successfully');
     } catch (error) {
-      console.error('Error updating admin:', error);
       throw error;
     }
   }
 
+  //Actualiza la contraseña
   async updatePassword(email: string, currentPassword: string, newPassword: string): Promise<void> {
     try {
-      // Sign in the user with their current password
+      //Inicia sesión con la contraseña actual del usuario
       const userCredential = await signInWithEmailAndPassword(this.auth, email, currentPassword);
       
-      // Update the password
+      //Actualiza la contraseña
       await updatePassword(userCredential.user, newPassword);
       
-      console.log('Password updated successfully');
     } catch (error) {
-      console.error('Error updating password:', error);
       throw error;
     }
   }
-
+  //Agrega un administrador
   async addAdmin(adminData: AdminData): Promise<void> {
     if (!adminData.rut || !adminData.password) {
       throw new Error('RUT and password are required for admin creation');
     }
 
     try {
-      // Check if an admin with this RUT already exists
+      //Verifica si un administrador con este RUT ya existe
       const adminDoc = doc(this.firestore, `Admin/${adminData.rut}`);
       const existingAdmin = await getDoc(adminDoc);
 
@@ -549,7 +548,7 @@ export class FirebaseService {
         throw new Error('An admin with this RUT already exists');
       }
 
-      // Check if an admin with this email already exists
+      //Verifica si un administrador con este email ya existe
       const existingEmailQuery = query(collection(this.firestore, 'Admin'), where('Email', '==', adminData.Email));
       const existingEmailSnapshot = await getDocs(existingEmailQuery);
 
@@ -557,68 +556,71 @@ export class FirebaseService {
         throw new Error('An admin with this email already exists');
       }
 
-      // Create a separate Firebase app instance for user creation
+      //Crea una instancia separada de Firebase para la creación de usuario
       const app = initializeApp(getApp().options, 'adminCreationApp');
       const adminAuth = getAuth(app);
 
-      // Create user in Firebase Authentication without affecting current session
+      //Crea un usuario en Firebase Authentication sin afectar la sesión actual
       const userCredential = await createUserWithEmailAndPassword(adminAuth, adminData.Email, adminData.password);
       
-      // Remove password-related fields from adminData before storing in Firestore
+      //Elimina los campos de contraseña antes de almacenar en Firestore
       const { password, currentPassword, newPassword, ...adminDataToStore } = adminData;
 
-      // Create admin document in Firestore
+      //Crea el documento del administrador en Firestore
       await setDoc(adminDoc, {
         ...adminDataToStore,
         isActive: true,
-        Rol: 'Admin' // Set default role
+        Rol: 'Admin' //Rol por defecto
       });
 
-      // Delete the temporary app
+      //Elimina la aplicación temporal
       await deleteApp(app);
 
-      console.log('New admin created successfully');
     } catch (error) {
-      console.error('Error creating new admin:', error);
       throw error;
     }
   }
 
+  //Crea un usuario sin iniciar sesión
   private async createUserWithoutSignIn(email: string, password: string): Promise<UserCredential> {
-    // Store the current user
+    //Almacena el usuario actual
     const currentUser = this.auth.currentUser;
 
-    // Create the new user
+    //Crea el nuevo usuario
     const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
 
-    // If there was a user signed in before, sign them back in
+    //Si hubo un usuario iniciado sesión antes, inicia sesión de nuevo
     if (currentUser) {
       await this.auth.updateCurrentUser(currentUser);
     } else {
-      // If no user was signed in, sign out the newly created user
+      //Si no hubo un usuario iniciado sesión antes, cierra sesión del usuario nuevo
       await this.auth.signOut();
     }
 
     return userCredential;
   }
 
+  //Elimina un conductor
   async deleteConductor(rut: string): Promise<void> {
     const conductorDoc = doc(this.firestore, `Conductor/${rut}`);
     await deleteDoc(conductorDoc);
   }
 
+  //Agrega o actualiza un conductor
   async addOrUpdateConductor(conductorData: Conductor) {
     const docRef = doc(this.firestore, 'Conductor', conductorData.RUT);
     return setDoc(docRef, conductorData, { merge: true }); // Usa merge: true para actualizar
   }
 
+  //Obtiene los conductores por colegio
   async getConductores(collegeId: string): Promise<Conductor[]> {
     const conductoresCollection = collection(this.firestore, 'Conductor');
     const q = query(conductoresCollection, where('FK_COColegio', '==', collegeId));
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as Conductor) })); // Ensure all properties of Conductor are included
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as Conductor) })); // Asegúrate de incluir todas las propiedades de Conductor
   }
 
+  //Obtiene los conductores por colegio
   async getConductoresByCollege(collegeId: string): Promise<Conductor[]> {
     const conductoresCollection = collection(this.firestore, 'Conductor');
     const q = query(conductoresCollection, where('FK_COColegio', '==', collegeId));
@@ -633,31 +635,35 @@ export class FirebaseService {
     return busesSnapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as Bus) }));
   }
 
+  //Agrega o actualiza un bus
   async addOrUpdateBus(busData: Bus): Promise<void> {
     const busDocRef = doc(this.firestore, 'Bus', busData.ID_Placa);
     await setDoc(busDocRef, busData, { merge: true }); // Usa merge: true para actualizar
   }
 
+  //Elimina un bus
   async deleteBus(idPlaca: string): Promise<void> {
     const busDoc = doc(this.firestore, `Bus/${idPlaca}`);
     await deleteDoc(busDoc);
   }
 
+  //Obtiene los conductores
   async getConductor(): Promise<Conductor[]> {
     const conductoresCollection = collection(this.firestore, 'Conductor');
     const querySnapshot = await getDocs(conductoresCollection);
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as Conductor) }));
   }
 
+  //Agrega o actualiza un colegio
   async addOrUpdateColegio(colegioData: Partial<College>): Promise<void> {
     try {
       if (colegioData.id) {
-        // Update existing college
+        //Actualiza un colegio existente
         const colegioDocRef = doc(this.firestore, 'Colegio', colegioData.id);
         await updateDoc(colegioDocRef, colegioData);
       } else {
-        // Add new college
-        const newId = (await this.getNextCollegeId()).toString(); // Convert to string immediately
+        //Agrega un nuevo colegio
+        const newId = (await this.getNextCollegeId()).toString(); //Convierte a string inmediatamente
         const newCollege: College = {
           ...colegioData as Omit<College, 'id'>,
           id: newId
@@ -666,44 +672,43 @@ export class FirebaseService {
         await setDoc(colegioDocRef, newCollege);
       }
     } catch (error) {
-      console.error('Error in addOrUpdateColegio:', error);
       throw error;
     }
   }
 
+  //Crea un usuario de apoderado
   async createParentUser(parentData: Apoderado & { password: string }): Promise<void> {
     try {
-      // Create auth user
+      //Crea un usuario de autenticación
       const app = initializeApp(getApp().options, 'parentCreationApp');
       const parentAuth = getAuth(app);
 
-      // Create the authentication account
+      //Crea el usuario de autenticación
       const userCredential = await createUserWithEmailAndPassword(
         parentAuth, 
         parentData.Email, 
         parentData.password
       );
 
-      // Remove password before storing in Firestore
+      //Elimina la contraseña antes de almacenar en Firestore
       const { password, ...parentDataWithoutPassword } = parentData;
 
-      // Store parent data in Firestore using RUT as document ID
+      //Almacena los datos del apoderado en Firestore usando el RUT como ID del documento
       const parentDoc = doc(this.firestore, `Apoderado/${parentData.RUT}`);
       await setDoc(parentDoc, {
         ...parentDataWithoutPassword,
-        uid: userCredential.user.uid  // Store the auth UID for reference
+        uid: userCredential.user.uid  //Almacena el ID de autenticación del usuario para referencia
       });
 
-      // Delete the temporary app
+      //Elimina la aplicación temporal
       await deleteApp(app);
 
-      console.log('Parent user created successfully');
     } catch (error) {
-      console.error('Error creating parent user:', error);
       throw error;
     }
   }
 
+  //Obtiene los buses por colegio
   async getBusesByCollege(collegeId: string): Promise<Bus[]> {
     const busesCollection = collection(this.firestore, 'Bus');
     const q = query(busesCollection, where('FK_BUColegio', '==', collegeId));

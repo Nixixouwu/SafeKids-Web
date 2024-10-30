@@ -10,16 +10,17 @@ import { AuthGuard } from './guards/auth.guard';
 import { SuperAdminGuard } from './guards/super-admin.guard';
 import { CollegesComponent } from './pages/admin-panel/colleges/colleges.component';
 import { AdminComponent } from './pages/admin-panel/admin/admin.component';
-import { ConductorComponent } from './pages/admin-panel/conductor/conductor.component'; // Importación del componente de conductores
-import { BusComponent } from './pages/admin-panel/bus/bus.component'; // Importación del componente de buses
+import { ConductorComponent } from './pages/admin-panel/conductor/conductor.component'; 
+import { BusComponent } from './pages/admin-panel/bus/bus.component'; 
 
+//Definición de las rutas de la aplicación
 export const routes: Routes = [
   { path: '', component: HomeComponent },
   { path: 'contact', component: ContactComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'login', component: LoginComponent },
   {
-    path: 'panel',
+    path: 'panel', // Ruta para el panel de administración
     component: AdminPanelComponent,
     canActivate: [AuthGuard],
     children: [
@@ -29,7 +30,7 @@ export const routes: Routes = [
       { path: 'alumnos', component: StudentComponent },
       { path: 'administradores', component: AdminComponent, canActivate: [SuperAdminGuard] },
       { path: 'conductores', component: ConductorComponent },
-      { path: 'buses', component: BusComponent }, // Ruta para el componente de buses
+      { path: 'buses', component: BusComponent },
     ]
   }
 ];

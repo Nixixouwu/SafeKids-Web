@@ -19,34 +19,41 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
   styleUrl: './contact.component.scss'
 })
 export class ContactComponent implements OnInit {
+  // Variables principales para el manejo del formulario y estados
   contactForm!: FormGroup;
-  formSubmitted = false;
-  formError = false;
+  formSubmitted = false;  // Indica si el formulario fue enviado exitosamente
+  formError = false;      // Indica si hubo un error al enviar el formulario
 
   constructor(private fb: FormBuilder, private http: HttpClient) {}
 
+  // Inicialización del componente y configuración del formulario
   ngOnInit() {
+    // Creación del formulario con validaciones
     this.contactForm = this.fb.group({
-      name: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
-      institution: ['', Validators.required],
-      phone: ['', [Validators.pattern('^[0-9]*$')]],
-      message: ['', Validators.required]
+      name: ['', Validators.required],                           // Nombre obligatorio
+      email: ['', [Validators.required, Validators.email]],      // Email obligatorio y válido
+      institution: ['', Validators.required],                    // Institución obligatoria
+      phone: ['', [Validators.pattern('^[0-9]*$')]],            // Teléfono solo números
+      message: ['', Validators.required]                         // Mensaje obligatorio
     });
   }
 
+  // Método para manejar el envío del formulario de contacto
   onSubmit() {
     if (this.contactForm.valid) {
-      const formspreeUrl = 'https://formspree.io/f/movagekg'; // Replace with your Formspree form ID
+      // URL de Formspree para el envío del formulario
+      const formspreeUrl = 'https://formspree.io/f/movagekg';
+      
+      // Envío del formulario a través de Formspree
       this.http.post(formspreeUrl, this.contactForm.value)
         .subscribe(
+          // Manejo de respuesta exitosa
           response => {
-            console.log('Form submitted successfully', response);
             this.formSubmitted = true;
             this.contactForm.reset();
           },
+          // Manejo de errores en el envío
           error => {
-            console.error('Error submitting form', error);
             this.formError = true;
           }
         );

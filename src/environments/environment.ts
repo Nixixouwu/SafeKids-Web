@@ -11,3 +11,5 @@ export const environment = {
         measurementId: "G-MS983GD0MJ"
     }
 };
+
+//Credenciales de Firebase

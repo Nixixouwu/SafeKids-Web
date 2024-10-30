@@ -7,9 +7,10 @@ import { map, take } from 'rxjs/operators';
 @Injectable({
   providedIn: 'root'
 })
+//Guardia de autenticación
 export class AuthGuard implements CanActivate {
   constructor(private firebaseService: FirebaseService, private router: Router) {}
-
+  //Verifica si el usuario está autenticado
   canActivate(): Observable<boolean> {
     return this.firebaseService.getCurrentUser().pipe(
       take(1),

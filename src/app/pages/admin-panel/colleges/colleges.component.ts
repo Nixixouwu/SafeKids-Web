@@ -12,9 +12,10 @@ import { NumbersOnlyDirective } from '../../../validators/numbers-only.validator
   styleUrls: ['./colleges.component.scss']
 })
 export class CollegesComponent implements OnInit {
+  // Variables principales para el manejo del formulario y datos
   colegioForm: FormGroup;
   colegios: College[] = [];
-  editingCollegeId: string | null = null; // Track the ID of the college being edited
+  editingCollegeId: string | null = null; // ID del colegio en edición
   isEditing: boolean = false;
   currentCollegeId: string | null = null;
 
@@ -22,6 +23,7 @@ export class CollegesComponent implements OnInit {
     private fb: FormBuilder,
     private firebaseService: FirebaseService
   ) {
+    // Inicialización del formulario con validaciones para colegios
     this.colegioForm = this.fb.group({
       Nombre: ['', Validators.required],
       Direccion: ['', Validators.required],
@@ -31,49 +33,52 @@ export class CollegesComponent implements OnInit {
     });
   }
 
+  // Inicialización del componente y carga de datos
   ngOnInit() {
     this.loadColegios();
   }
 
+  // Método para cargar la lista de colegios
   async loadColegios() {
     this.colegios = await this.firebaseService.getColleges();
   }
 
+  // Método para manejar el envío del formulario
   async onSubmit() {
     if (this.colegioForm.valid) {
       try {
         const colegioData = this.colegioForm.value;
         
+        // Si está en modo edición, incluye el ID del colegio
         if (this.isEditing && this.currentCollegeId) {
-          // If editing, include the ID
           colegioData.id = this.currentCollegeId;
         }
 
+        // Guardado o actualización del colegio
         await this.firebaseService.addOrUpdateColegio(colegioData);
-        console.log('Colegio guardado exitosamente');
-        this.colegioForm.reset();
-        this.isEditing = false;
-        this.currentCollegeId = null;
+        this.resetForm();
         this.loadColegios();
       } catch (error) {
-        console.error('Error al guardar el colegio:', error);
         alert('Ocurrió un error al guardar el colegio. Por favor, intente nuevamente.');
       }
     }
   }
 
+  // Método para editar un colegio existente
   editColegio(colegio: College) {
     this.isEditing = true;
     this.currentCollegeId = colegio.id;
     this.colegioForm.patchValue(colegio);
   }
 
+  // Método para reiniciar el formulario
   resetForm() {
     this.colegioForm.reset();
     this.isEditing = false;
     this.currentCollegeId = null;
   }
 
+  // Método para eliminar un colegio
   async deleteColegio(id: string) {
     if (confirm('¿Estás seguro de que quieres eliminar este colegio?')) {
       await this.firebaseService.deleteCollege(id);

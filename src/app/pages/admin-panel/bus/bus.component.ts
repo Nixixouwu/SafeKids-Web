@@ -15,6 +15,7 @@ import { AdminPanelComponent } from '../admin-panel.component';
   styleUrls: ['./bus.component.scss']
 })
 export class BusComponent implements OnInit {
+  // Variables principales para el manejo del formulario y datos
   busForm: FormGroup;
   buses: Bus[] = [];
   colleges: College[] = [];
@@ -29,6 +30,7 @@ export class BusComponent implements OnInit {
     private firebaseService: FirebaseService,
     private adminPanelComponent: AdminPanelComponent
   ) {
+    // Inicialización del formulario con validaciones para buses
     this.busForm = this.fb.group({
       FK_BUColegio: ['', Validators.required],
       FK_BUConductor: ['', Validators.required],
@@ -38,19 +40,20 @@ export class BusComponent implements OnInit {
     });
   }
 
+  // Inicialización del componente y carga de datos
   ngOnInit() {
     this.loadBuses();
     this.loadColleges();
     this.loadConductores();
   }
 
+  // Método para cargar la lista de buses según permisos
   async loadBuses() {
     combineLatest([
       this.adminPanelComponent.isSuperAdmin$,
       this.adminPanelComponent.currentAdminCollege$
     ]).pipe(
       switchMap(([isSuperAdmin, collegeId]) => {
-        console.log('Is Super Admin:', isSuperAdmin, 'College ID:', collegeId);
         if (isSuperAdmin) {
           return this.firebaseService.getBuses();
         } else {
@@ -60,20 +63,20 @@ export class BusComponent implements OnInit {
     ).subscribe(
       buses => {
         this.buses = buses;
-        console.log('Loaded buses:', this.buses);
       },
       error => {
-        console.error('Error loading buses:', error);
         this.buses = [];
       }
     );
   }
 
+  // Método para manejar el envío del formulario
   async onSubmit() {
     if (this.busForm.valid) {
       const busData: Bus = this.busForm.value;
       
       try {
+        // Verificación de placa duplicada
         const existingBus = this.buses.find(bus => bus.ID_Placa === busData.ID_Placa);
         
         if (existingBus && !this.isEditing) {
@@ -81,21 +84,17 @@ export class BusComponent implements OnInit {
           return;
         }
 
+        // Guardado o actualización del bus
         await this.firebaseService.addOrUpdateBus(busData);
-        console.log('Bus guardado exitosamente');
-        this.busForm.reset();
-        this.isEditing = false;
-        this.currentBusId = null;
+        this.resetForm();
         this.loadBuses();
       } catch (error) {
-        console.error('Error al guardar el bus:', error);
         alert('Ocurrió un error al guardar el bus. Por favor, intente nuevamente.');
       }
-    } else {
-      console.log('El formulario es inválido', this.busForm.errors);
     }
   }
 
+  // Método para editar un bus existente
   editBus(bus: Bus) {
     this.isEditing = true;
     this.currentBusId = bus.ID_Placa;
@@ -103,6 +102,7 @@ export class BusComponent implements OnInit {
     this.busForm.get('ID_Placa')?.disable();
   }
 
+  // Método para reiniciar el formulario
   resetForm() {
     this.busForm.reset();
     this.isEditing = false;
@@ -110,6 +110,7 @@ export class BusComponent implements OnInit {
     this.busForm.get('ID_Placa')?.enable();
   }
 
+  // Método para eliminar un bus
   async deleteBus(idPlaca: string) {
     if (confirm('¿Estás seguro de que quieres eliminar este bus?')) {
       await this.firebaseService.deleteBus(idPlaca);
@@ -117,13 +118,13 @@ export class BusComponent implements OnInit {
     }
   }
 
+  // Método para cargar la lista de colegios según permisos
   async loadColleges() {
     combineLatest([
       this.adminPanelComponent.isSuperAdmin$,
       this.adminPanelComponent.currentAdminCollege$
     ]).pipe(
       switchMap(([isSuperAdmin, collegeId]) => {
-        console.log('Is Super Admin:', isSuperAdmin, 'College ID:', collegeId);
         if (isSuperAdmin) {
           return this.firebaseService.getColleges();
         } else {
@@ -134,19 +135,19 @@ export class BusComponent implements OnInit {
       colleges => {
         this.colleges = colleges;
         this.collegeMap = new Map(this.colleges.map(college => [college.id, college.Nombre]));
-        console.log('Loaded colleges:', this.colleges);
       },
       error => {
-        console.error('Error loading colleges:', error);
         this.colleges = [];
       }
     );
   }
 
+  // Método auxiliar para obtener el nombre del colegio
   getCollegeName(id: string): string {
     return this.collegeMap.get(id) || 'Unknown College';
   }
 
+  // Método para cargar la lista de conductores según permisos
   loadConductores() {
     combineLatest([
       this.adminPanelComponent.isSuperAdmin$,
@@ -170,12 +171,12 @@ export class BusComponent implements OnInit {
         );
       },
       error => {
-        console.error('Error loading conductores:', error);
         this.conductores = [];
       }
     );
   }
 
+  // Método auxiliar para obtener el nombre del conductor
   getConductorName(rut: string): string {
     return this.conductorMap.get(rut) || 'Unknown Conductor';
   }

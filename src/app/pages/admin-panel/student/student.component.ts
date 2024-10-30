@@ -17,6 +17,7 @@ import { rutValidator } from '../../../validators/rut.validator';
   styleUrls: ['./student.component.scss']
 })
 export class StudentComponent implements OnInit, AfterViewInit {
+  // Variables principales para el manejo del formulario y datos
   alumnoForm: FormGroup;
   alumnos: Alumno[] = [];
   colleges: College[] = [];
@@ -32,6 +33,7 @@ export class StudentComponent implements OnInit, AfterViewInit {
     private firebaseService: FirebaseService,
     private adminPanelComponent: AdminPanelComponent
   ) {
+    // Inicialización del formulario con validaciones
     this.alumnoForm = this.fb.group({
       Apellido: ['', Validators.required],
       Curso: ['', Validators.required],
@@ -45,9 +47,10 @@ export class StudentComponent implements OnInit, AfterViewInit {
       RUT: ['', [Validators.required, rutValidator()]]
     });
 
-    // Add a listener for changes to FK_ALApoderado
+    // Observador para cambios en el apoderado seleccionado
     this.alumnoForm.get('FK_ALApoderado')?.valueChanges.subscribe(apoderadoRUT => {
       if (apoderadoRUT) {
+        // Actualiza automáticamente el colegio según el apoderado seleccionado
         const collegeId = this.apoderadoCollegeMap.get(apoderadoRUT);
         if (collegeId) {
           this.alumnoForm.patchValue({ FK_ALColegio: collegeId });
@@ -59,6 +62,7 @@ export class StudentComponent implements OnInit, AfterViewInit {
     });
   }
 
+  // Validador personalizado para el campo de edad
   ageValidator(control: AbstractControl): {[key: string]: any} | null {
     const value = control.value;
     if (isNaN(value) || value < 0 || value > 99) {
@@ -67,6 +71,7 @@ export class StudentComponent implements OnInit, AfterViewInit {
     return null;
   }
 
+  // Configuración del límite de edad después de que la vista se inicializa
   ngAfterViewInit() {
     const edadInput = document.getElementById('edad') as HTMLInputElement;
     edadInput.addEventListener('input', function(this: HTMLInputElement) {
@@ -79,6 +84,7 @@ export class StudentComponent implements OnInit, AfterViewInit {
     });
   }
 
+  // Inicialización del componente y carga de datos
   ngOnInit() {
     combineLatest([
       this.adminPanelComponent.isSuperAdmin$,
@@ -93,32 +99,30 @@ export class StudentComponent implements OnInit, AfterViewInit {
       })
     ).subscribe(alumnos => {
       this.alumnos = alumnos;
-      console.log('Loaded alumnos:', this.alumnos);
     });
 
-    // Load other necessary data
+    // Carga de datos complementarios
     this.loadColleges();
     this.loadApoderados();
   }
 
+  // Método para cargar la lista de alumnos
   async loadAlumnos() {
     this.adminPanelComponent.currentAdminCollege$.pipe(
       switchMap(collegeId => {
-        console.log('Loading alumnos for college:', collegeId);
         return collegeId ? this.firebaseService.getAlumnosByCollege(collegeId) : of([]);
       })
     ).subscribe(
       alumnos => {
         this.alumnos = alumnos;
-        console.log('Loaded alumnos:', this.alumnos);
       },
       error => {
-        console.error('Error loading alumnos:', error);
         this.alumnos = [];
       }
     );
   }
 
+  // Método para cargar la lista de colegios
   async loadColleges() {
     combineLatest([
       this.adminPanelComponent.isSuperAdmin$,
@@ -135,15 +139,14 @@ export class StudentComponent implements OnInit, AfterViewInit {
       colleges => {
         this.colleges = colleges;
         this.collegeMap = new Map(this.colleges.map(college => [college.id, college.Nombre]));
-        console.log('Loaded colleges:', this.colleges);
       },
       error => {
-        console.error('Error loading colleges:', error);
         this.colleges = [];
       }
     );
   }
 
+  // Método para cargar la lista de apoderados
   async loadApoderados() {
     combineLatest([
       this.adminPanelComponent.isSuperAdmin$,
@@ -160,20 +163,20 @@ export class StudentComponent implements OnInit, AfterViewInit {
       apoderados => {
         this.apoderados = apoderados;
         this.apoderadoCollegeMap = new Map(this.apoderados.map(apoderado => [apoderado.RUT, apoderado.FK_APColegio]));
-        console.log('Loaded apoderados:', this.apoderados);
       },
       error => {
-        console.error('Error loading apoderados:', error);
         this.apoderados = [];
       }
     );
   }
 
+  // Método para manejar el envío del formulario
   async onSubmit() {
     if (this.alumnoForm.valid) {
       const alumnoData = this.alumnoForm.getRawValue();
       
       try {
+        // Verificación de RUT duplicado
         const existingStudent = this.alumnos.find(student => student.RUT === alumnoData.RUT);
         
         if (existingStudent && !this.isEditing) {
@@ -181,19 +184,17 @@ export class StudentComponent implements OnInit, AfterViewInit {
           return;
         }
 
+        // Guardado o actualización del alumno
         await this.firebaseService.addOrUpdateAlumno(alumnoData);
-        console.log('Alumno guardado exitosamente');
-        this.alumnoForm.reset();
-        this.isEditing = false;
-        this.currentStudentRut = null;
+        this.resetForm();
         this.loadAlumnos();
       } catch (error) {
-        console.error('Error al guardar el alumno:', error);
         alert('Ocurrió un error al guardar el alumno. Por favor, intente nuevamente.');
       }
     }
   }
 
+  // Método para editar un alumno existente
   editAlumno(alumno: Alumno) {
     this.isEditing = true;
     this.currentStudentRut = alumno.RUT;
@@ -201,6 +202,7 @@ export class StudentComponent implements OnInit, AfterViewInit {
     this.alumnoForm.get('RUT')?.disable();
   }
 
+  // Método para reiniciar el formulario
   resetForm() {
     this.alumnoForm.reset();
     this.isEditing = false;
@@ -208,6 +210,7 @@ export class StudentComponent implements OnInit, AfterViewInit {
     this.alumnoForm.get('RUT')?.enable();
   }
 
+  // Método para eliminar un alumno
   async deleteAlumno(rut: string) {
     if (confirm('¿Estás seguro de que quieres eliminar este alumno?')) {
       await this.firebaseService.deleteAlumno(rut);
@@ -215,6 +218,7 @@ export class StudentComponent implements OnInit, AfterViewInit {
     }
   }
 
+  // Método auxiliar para obtener el nombre del colegio
   getCollegeName(id: string): string {
     return this.collegeMap.get(id) || 'Unknown College';
   }

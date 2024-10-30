@@ -11,11 +11,11 @@ import { SuperAdminGuard } from './guards/super-admin.guard';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideRouter(routes),
-    provideFirebaseApp(() => initializeApp(environment.firebase)),
-    provideFirestore(() => getFirestore()),
-    provideAuth(() => getAuth()),
-    AuthGuard,
-    SuperAdminGuard
+    provideRouter(routes), // Configuración del enrutador
+    provideFirebaseApp(() => initializeApp(environment.firebase)), // Configuración de Firebase
+    provideFirestore(() => getFirestore()), // Configuración de Firestore
+    provideAuth(() => getAuth()), // Configuración de Auth
+    AuthGuard, // Guardia de autenticación
+    SuperAdminGuard // Guardia de superadmin
   ]
 };

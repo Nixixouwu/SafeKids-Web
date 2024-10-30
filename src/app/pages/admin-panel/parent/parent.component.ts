@@ -17,6 +17,7 @@ import { AdminPanelComponent } from '../admin-panel.component';
   styleUrls: ['./parent.component.scss']
 })
 export class ParentComponent implements OnInit {
+  // Variables principales para el manejo del formulario y datos
   apoderadoForm: FormGroup;
   apoderados: Apoderado[] = [];
   colleges: College[] = [];
@@ -30,6 +31,7 @@ export class ParentComponent implements OnInit {
     private firebaseService: FirebaseService,
     private adminPanelComponent: AdminPanelComponent
   ) {
+    // Inicialización del formulario con validaciones
     this.apoderadoForm = this.fb.group({
       Nombre: ['', Validators.required],
       Apellido: ['', Validators.required],
@@ -42,11 +44,13 @@ export class ParentComponent implements OnInit {
     });
   }
 
+  // Inicialización del componente y carga de datos
   ngOnInit() {
     this.loadApoderados();
     this.loadColleges();
   }
 
+  // Método para cargar los datos del administrador actual
   async loadCurrentAdminData() {
     try {
       const currentUser = await firstValueFrom(this.firebaseService.getCurrentUser());
@@ -54,21 +58,19 @@ export class ParentComponent implements OnInit {
         const adminData = await this.firebaseService.getAdminData(currentUser);
         if (adminData) {
           this.currentAdminCollege = adminData.fk_adcolegio;
-          console.log('Current admin college:', this.currentAdminCollege);
         }
       }
     } catch (error) {
-      console.error('Error loading current admin data:', error);
     }
   }
 
+  // Método para cargar la lista de apoderados según permisos
   async loadApoderados() {
     combineLatest([
       this.adminPanelComponent.isSuperAdmin$,
       this.adminPanelComponent.currentAdminCollege$
     ]).pipe(
       switchMap(([isSuperAdmin, collegeId]) => {
-        console.log('Is Super Admin:', isSuperAdmin, 'College ID:', collegeId);
         if (isSuperAdmin) {
           return this.firebaseService.getApoderados();
         } else {
@@ -78,22 +80,20 @@ export class ParentComponent implements OnInit {
     ).subscribe(
       apoderados => {
         this.apoderados = apoderados;
-        console.log('Loaded apoderados:', this.apoderados);
       },
       error => {
-        console.error('Error loading apoderados:', error);
         this.apoderados = [];
       }
     );
   }
 
+  // Método para cargar la lista de colegios según permisos
   async loadColleges() {
     combineLatest([
       this.adminPanelComponent.isSuperAdmin$,
       this.adminPanelComponent.currentAdminCollege$
     ]).pipe(
       switchMap(([isSuperAdmin, collegeId]) => {
-        console.log('Is Super Admin:', isSuperAdmin, 'College ID:', collegeId);
         if (isSuperAdmin) {
           return this.firebaseService.getColleges();
         } else {
@@ -104,24 +104,25 @@ export class ParentComponent implements OnInit {
       colleges => {
         this.colleges = colleges;
         this.collegeMap = new Map(this.colleges.map(college => [college.id, college.Nombre]));
-        console.log('Loaded colleges:', this.colleges);
       },
       error => {
-        console.error('Error loading colleges:', error);
         this.colleges = [];
       }
     );
   }
 
+  // Método auxiliar para obtener el nombre del colegio
   getCollegeName(id: string): string {
     return this.collegeMap.get(id) || 'Unknown College';
   }
 
+  // Método para manejar el envío del formulario
   async onSubmit() {
     if (this.apoderadoForm.valid) {
       try {
         const apoderadoData = this.apoderadoForm.getRawValue();
         
+        // Verificación de RUT duplicado
         const existingParent = this.apoderados.find(parent => parent.RUT === apoderadoData.RUT);
         
         if (existingParent && !this.isEditing) {
@@ -129,6 +130,7 @@ export class ParentComponent implements OnInit {
           return;
         }
 
+        // Lógica diferente para edición y creación
         if (this.isEditing) {
           const { password, ...updateData } = apoderadoData;
           await this.firebaseService.addOrUpdateApoderado(updateData);
@@ -136,39 +138,36 @@ export class ParentComponent implements OnInit {
           await this.firebaseService.createParentUser(apoderadoData);
         }
 
-        console.log('Apoderado guardado exitosamente');
-        this.apoderadoForm.reset();
-        this.isEditing = false;
-        this.currentParentRut = null;
-        
-        this.apoderadoForm.get('RUT')?.enable();
-        this.apoderadoForm.get('Email')?.enable();
-        
+        this.resetForm();
         this.loadApoderados();
       } catch (error) {
-        console.error('Error al guardar el apoderado:', error);
         alert('Ocurrió un error al guardar el apoderado. Por favor, intente nuevamente.');
       }
     }
   }
 
+  // Método para editar un apoderado existente
   editApoderado(apoderado: Apoderado) {
     this.isEditing = true;
     this.currentParentRut = apoderado.RUT;
     this.apoderadoForm.patchValue(apoderado);
     
+    // Deshabilita campos que no se deben editar
     this.apoderadoForm.get('RUT')?.disable();
     this.apoderadoForm.get('Email')?.disable();
     
+    // Elimina validación de contraseña en modo edición
     this.apoderadoForm.get('password')?.clearValidators();
     this.apoderadoForm.get('password')?.updateValueAndValidity();
   }
 
+  // Método para reiniciar el formulario
   resetForm() {
     this.apoderadoForm.reset();
     this.isEditing = false;
     this.currentParentRut = null;
     
+    // Habilita campos y restaura validaciones
     this.apoderadoForm.get('RUT')?.enable();
     this.apoderadoForm.get('Email')?.enable();
     
@@ -176,6 +175,7 @@ export class ParentComponent implements OnInit {
     this.apoderadoForm.get('password')?.updateValueAndValidity();
   }
 
+  // Método para eliminar un apoderado
   async deleteApoderado(rut: string) {
     if (confirm('¿Estás seguro de que quieres eliminar este apoderado?')) {
       await this.firebaseService.deleteApoderado(rut);

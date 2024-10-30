@@ -33,6 +33,7 @@ export class RegisterComponent implements OnInit {
     private router: Router,
     private http: HttpClient
   ) {
+    // Inicializa el formulario de registro con validaciones
     this.registerForm = this.fb.group({
       rut: ['', [Validators.required, rutValidator()]],
       nombre: ['', Validators.required],
@@ -44,23 +45,26 @@ export class RegisterComponent implements OnInit {
     });
   }
 
+  // Carga la lista de colegios al iniciar el componente
   async ngOnInit() {
     try {
       this.colleges = await this.firebaseService.getColleges();
     } catch (error) {
-      console.error('Error fetching colleges:', error);
       this.errorMessage = 'Error loading colleges. Please try again.';
       this.showErrorCloud = true;
     }
   }
 
+  // Maneja el envío del formulario de registro
   async onSubmit() {
     this.showErrorCloud = false;
     this.errorMessage = '';
 
+    // Verifica si el formulario es válido y muestra mensajes de error específicos
     if (this.registerForm.invalid) {
       this.showErrorCloud = true;
       
+      // Validaciones específicas para cada campo del formulario
       if (this.registerForm.get('rut')?.invalid) {
         this.errorMessage = 'Por favor, ingrese un RUT válido.';
       } else if (this.registerForm.get('nombre')?.invalid) {
@@ -82,15 +86,15 @@ export class RegisterComponent implements OnInit {
       return;
     }
 
-    const formspreeUrl = 'https://formspree.io/f/movagekg'; // Replace with your Formspree form ID
+    // Envía los datos del formulario a Formspree
+    const formspreeUrl = 'https://formspree.io/f/movagekg';
     const formData = this.registerForm.value;
 
     try {
+      // Intenta enviar el formulario y redirige al login si es exitoso
       const response = await this.http.post(formspreeUrl, formData).toPromise();
-      console.log('Form submitted successfully', response);
       this.router.navigate(['/login']);
     } catch (error) {
-      console.error('Error submitting form:', error);
       this.errorMessage = 'Error al enviar la solicitud. Por favor, inténtelo de nuevo.';
       this.showErrorCloud = true;
     }

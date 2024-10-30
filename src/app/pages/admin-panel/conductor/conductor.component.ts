@@ -23,6 +23,7 @@ import { rutValidator } from '../../../validators/rut.validator';
   styleUrls: ['./conductor.component.scss']
 })
 export class ConductorComponent implements OnInit {
+  // Variables principales para el manejo del formulario y datos
   conductorForm: FormGroup;
   conductores: Conductor[] = [];
   colleges: College[] = [];
@@ -36,10 +37,11 @@ export class ConductorComponent implements OnInit {
     private firebaseService: FirebaseService,
     private adminPanelComponent: AdminPanelComponent
   ) {
+    // Inicialización del formulario con validaciones específicas para conductores
     this.conductorForm = this.fb.group({
       Apellido: ['', Validators.required],
       Direccion: ['', Validators.required],
-      Edad: ['', [Validators.required, Validators.min(18), Validators.max(65)]],
+      Edad: ['', [Validators.required, Validators.min(18), Validators.max(65)]], // Restricción de edad para conductores
       Genero: ['', Validators.required],
       Imagen: [''],
       Nombre: ['', Validators.required],
@@ -50,18 +52,19 @@ export class ConductorComponent implements OnInit {
     });
   }
 
+  // Inicialización del componente y carga de datos
   ngOnInit() {
     this.loadConductores();
     this.loadColleges();
   }
 
+  // Método para cargar la lista de conductores según permisos
   async loadConductores() {
     combineLatest([
       this.adminPanelComponent.isSuperAdmin$,
       this.adminPanelComponent.currentAdminCollege$
     ]).pipe(
       switchMap(([isSuperAdmin, collegeId]) => {
-        console.log('Is Super Admin:', isSuperAdmin, 'College ID:', collegeId);
         if (isSuperAdmin) {
           return this.firebaseService.getConductor();
         } else {
@@ -71,22 +74,20 @@ export class ConductorComponent implements OnInit {
     ).subscribe(
       conductores => {
         this.conductores = conductores;
-        console.log('Loaded conductores:', this.conductores);
       },
       error => {
-        console.error('Error loading conductores:', error);
         this.conductores = [];
       }
     );
   }
 
+  // Método para cargar la lista de colegios según permisos
   async loadColleges() {
     combineLatest([
       this.adminPanelComponent.isSuperAdmin$,
       this.adminPanelComponent.currentAdminCollege$
     ]).pipe(
       switchMap(([isSuperAdmin, collegeId]) => {
-        console.log('Is Super Admin:', isSuperAdmin, 'College ID:', collegeId);
         if (isSuperAdmin) {
           return this.firebaseService.getColleges();
         } else {
@@ -97,20 +98,20 @@ export class ConductorComponent implements OnInit {
       colleges => {
         this.colleges = colleges;
         this.collegeMap = new Map(this.colleges.map(college => [college.id, college.Nombre]));
-        console.log('Loaded colleges:', this.colleges);
       },
       error => {
-        console.error('Error loading colleges:', error);
         this.colleges = [];
       }
     );
   }
 
+  // Método para manejar el envío del formulario
   async onSubmit() {
     if (this.conductorForm.valid) {
       const conductorData: Conductor = this.conductorForm.value;
       
       try {
+        // Verificación de RUT duplicado
         const existingConductor = this.conductores.find(conductor => conductor.RUT === conductorData.RUT);
         
         if (existingConductor && !this.isEditing) {
@@ -118,45 +119,42 @@ export class ConductorComponent implements OnInit {
           return;
         }
 
+        // Guardado o actualización del conductor
         await this.firebaseService.addOrUpdateConductor(conductorData);
-        console.log('Conductor guardado exitosamente');
-        this.conductorForm.reset();
-        this.isEditing = false;
-        this.currentConductorRut = null;
+        this.resetForm();
         this.loadConductores();
       } catch (error) {
-        console.error('Error al guardar el conductor:', error);
         alert('Ocurrió un error al guardar el conductor. Por favor, intente nuevamente.');
       }
-    } else {
-      console.log('El formulario es inválido', this.conductorForm.errors);
     }
   }
 
+  // Método para editar un conductor existente
   editConductor(conductor: Conductor) {
     this.isEditing = true;
     this.currentConductorRut = conductor.RUT;
     this.conductorForm.patchValue(conductor);
   }
 
+  // Método para eliminar un conductor
   deleteConductor(rut: string) {
     if (confirm('¿Estás seguro de que quieres eliminar este conductor?')) {
       this.firebaseService.deleteConductor(rut)
         .then(() => {
-          console.log('Conductor eliminado exitosamente');
           this.loadConductores();
         })
         .catch(error => {
-          console.error('Error al eliminar el conductor:', error);
           alert('Error al eliminar el conductor. Por favor, inténtalo de nuevo.');
         });
     }
   }
 
+  // Método auxiliar para obtener el nombre del colegio
   getCollegeName(id: string): string {
     return this.collegeMap.get(id) || 'Unknown College';
   }
 
+  // Método para reiniciar el formulario
   resetForm() {
     this.conductorForm.reset();
     this.isEditing = false;

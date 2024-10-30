@@ -9,7 +9,7 @@ import { map, take } from 'rxjs/operators';
 })
 export class AuthGuard implements CanActivate {
   constructor(private firebaseService: FirebaseService, private router: Router) {}
-
+// Método para verificar si el usuario está autenticado
   canActivate(
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {

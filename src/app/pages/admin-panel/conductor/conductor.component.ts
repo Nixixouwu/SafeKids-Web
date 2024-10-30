@@ -31,6 +31,8 @@ export class ConductorComponent implements OnInit {
   currentAdminCollege: string | null = null;
   isEditing: boolean = false;
   currentConductorRut: string | null = null;
+  selectedFile: File | null = null;
+  imagePreview: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -108,22 +110,49 @@ export class ConductorComponent implements OnInit {
   // Método para manejar el envío del formulario
   async onSubmit() {
     if (this.conductorForm.valid) {
-      const conductorData: Conductor = this.conductorForm.value;
-      
       try {
+        // Usar getRawValue() para obtener también los campos deshabilitados
+        const conductorData: Conductor = {
+          ...this.conductorForm.getRawValue()
+        };
+
+        // Handle image upload with old image cleanup
+        if (this.selectedFile) {
+          const oldImageUrl = this.isEditing ? 
+            this.conductores.find(c => c.RUT === conductorData.RUT)?.Imagen : 
+            undefined;
+
+          const imageUrl = await this.firebaseService.uploadImage(
+            this.selectedFile,
+            `conductores/${conductorData.RUT}`, // Organize by conductor RUT
+            oldImageUrl  // Pass the old image URL for cleanup
+          );
+          conductorData.Imagen = imageUrl;
+        } else if (this.isEditing) {
+          // Keep existing image if no new one is selected
+          const currentConductor = this.conductores.find(c => c.RUT === conductorData.RUT);
+          if (currentConductor) {
+            conductorData.Imagen = currentConductor.Imagen;
+          }
+        }
+
         // Verificación de RUT duplicado
-        const existingConductor = this.conductores.find(conductor => conductor.RUT === conductorData.RUT);
+        const existingConductor = this.conductores.find(conductor => 
+          conductor.RUT === conductorData.RUT && !this.isEditing
+        );
         
-        if (existingConductor && !this.isEditing) {
+        if (existingConductor) {
           alert('Ya existe un conductor con este RUT. Por favor, use un RUT diferente.');
           return;
         }
 
-        // Guardado o actualización del conductor
+        // Save conductor data
         await this.firebaseService.addOrUpdateConductor(conductorData);
         this.resetForm();
         this.loadConductores();
+        alert('Conductor guardado exitosamente');
       } catch (error) {
+        console.error('Error al guardar el conductor:', error);
         alert('Ocurrió un error al guardar el conductor. Por favor, intente nuevamente.');
       }
     }
@@ -133,19 +162,62 @@ export class ConductorComponent implements OnInit {
   editConductor(conductor: Conductor) {
     this.isEditing = true;
     this.currentConductorRut = conductor.RUT;
-    this.conductorForm.patchValue(conductor);
+    
+    // Resetear el formulario antes de cargar los nuevos valores
+    this.conductorForm.reset();
+    
+    // Cargar los valores del conductor
+    this.conductorForm.patchValue({
+      Apellido: conductor.Apellido,
+      Direccion: conductor.Direccion,
+      Edad: conductor.Edad,
+      Email: conductor.Email,
+      FK_COColegio: conductor.FK_COColegio,
+      Fecha_Admision: conductor.Fecha_Admision,
+      Genero: conductor.Genero,
+      Imagen: conductor.Imagen,
+      Nombre: conductor.Nombre,
+      RUT: conductor.RUT
+    });
+
+    // Deshabilitar RUT y Email durante la edición
+    this.conductorForm.get('RUT')?.disable();
+    this.conductorForm.get('Email')?.disable();
+    
+    // Actualizar la vista previa de la imagen si existe
+    if (conductor.Imagen) {
+      this.imagePreview = conductor.Imagen;
+    }
+
+    // Asegurarse de que los selectores tengan las opciones correctas
+    if (conductor.FK_COColegio) {
+      this.conductorForm.get('FK_COColegio')?.setValue(conductor.FK_COColegio);
+    }
+
+    if (conductor.Genero) {
+      this.conductorForm.get('Genero')?.setValue(conductor.Genero);
+    }
+
+    // Asegurarse de que la fecha se establezca correctamente
+    if (conductor.Fecha_Admision) {
+      this.conductorForm.get('Fecha_Admision')?.setValue(conductor.Fecha_Admision);
+    }
   }
 
   // Método para eliminar un conductor
-  deleteConductor(rut: string) {
+  async deleteConductor(rut: string) {
     if (confirm('¿Estás seguro de que quieres eliminar este conductor?')) {
-      this.firebaseService.deleteConductor(rut)
-        .then(() => {
-          this.loadConductores();
-        })
-        .catch(error => {
-          alert('Error al eliminar el conductor. Por favor, inténtalo de nuevo.');
-        });
+      try {
+        const conductorToDelete = this.conductores.find(c => c.RUT === rut);
+        if (conductorToDelete?.Imagen) {
+          await this.firebaseService.deleteImage(conductorToDelete.Imagen);
+        }
+        await this.firebaseService.deleteConductor(rut);
+        this.loadConductores();
+      } catch (error) {
+        console.error('Error al eliminar el conductor:', error);
+        alert('Ocurrió un error al eliminar el conductor. Por favor, intente nuevamente.');
+      }
     }
   }
 
@@ -159,5 +231,34 @@ export class ConductorComponent implements OnInit {
     this.conductorForm.reset();
     this.isEditing = false;
     this.currentConductorRut = null;
+    
+    // Habilitar RUT y Email
+    this.conductorForm.get('RUT')?.enable();
+    this.conductorForm.get('Email')?.enable();
+    
+    // Reset image-related states
+    this.selectedFile = null;
+    this.imagePreview = null;
+    
+    // Reset file input
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }
+
+  // Add this method to handle file selection
+  async onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.imagePreview = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
   }
 }

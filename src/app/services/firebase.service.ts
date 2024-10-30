@@ -57,14 +57,15 @@ export interface Apoderado {
 export interface Conductor {
   RUT: string;
   Nombre: string;
-  Imagen: string;
-  Fecha_Admision: string;
-  FK_COColegio: string;
-  FK_COBus: string;
   Apellido: string;
   Email: string;
   Edad: number;
   Direccion: string;
+  FK_COColegio: string;
+  FK_COBus?: string;
+  Fecha_Admision: string;
+  Imagen: string;
+  Genero: string;
 }
 
 export interface Bus {

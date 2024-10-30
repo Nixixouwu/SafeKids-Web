@@ -77,8 +77,22 @@
       </div>
       <div class="col-md-6">
         <div class="form-floating mb-3">
-          <input type="text" class="form-control" id="imagen" formControlName="Imagen" placeholder="URL de la imagen">
-          <label for="imagen">URL de la imagen</label>
+          <input 
+            type="file" 
+            class="form-control" 
+            id="imagen"
+            (change)="onFileSelected($event)"
+            accept="image/*"
+            #fileInput>
+          <label for="imagen" class="form-label">Imagen del Conductor</label>
+        </div>
+        
+        <!-- Preview de la imagen -->
+        <div *ngIf="imagePreview || conductorForm.get('Imagen')?.value" class="mb-3">
+          <img 
+            [src]="imagePreview || conductorForm.get('Imagen')?.value" 
+            alt="Preview"
+            class="img-preview">
         </div>
       </div>
     </div>

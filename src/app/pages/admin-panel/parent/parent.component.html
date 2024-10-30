@@ -48,8 +48,22 @@
       </div>
       <div class="col-md-6">
         <div class="form-floating mb-3">
-          <input type="text" class="form-control" id="imagen" formControlName="Imagen" placeholder="URL de la imagen">
-          <label for="imagen">URL de la imagen</label>
+          <input 
+            type="file" 
+            class="form-control" 
+            id="imagen"
+            (change)="onFileSelected($event)"
+            accept="image/*"
+            #fileInput>
+          <label for="imagen" class="form-label">Imagen del Apoderado</label>
+        </div>
+        
+        <!-- Preview de la imagen -->
+        <div *ngIf="imagePreview || apoderadoForm.get('Imagen')?.value" class="mb-3">
+          <img 
+            [src]="imagePreview || apoderadoForm.get('Imagen')?.value" 
+            alt="Preview"
+            class="img-preview">
         </div>
       </div>
       <div class="col-md-6" *ngIf="!isEditing">
@@ -88,6 +102,7 @@
           <th>Email</th>
           <th>Teléfono</th>
           <th>Colegio</th>
+          <th>Imagen</th>
           <th>Acciones</th>
         </tr>
       </thead>
@@ -99,6 +114,7 @@
           <td>{{ apoderado.Email }}</td>
           <td>{{ apoderado.Telefono }}</td>
           <td>{{ getCollegeName(apoderado.FK_APColegio) }}</td>
+          <td><img [src]="apoderado.Imagen" alt="Apoderado Image" width="50" *ngIf="apoderado.Imagen"></td>
           <td>
             <button class="btn btn-sm btn-outline-primary me-2" (click)="editApoderado(apoderado)">Editar</button>
             <button class="btn btn-sm btn-outline-danger" (click)="deleteApoderado(apoderado.RUT)">Eliminar</button>

@@ -25,6 +25,8 @@ export class ParentComponent implements OnInit {
   currentAdminCollege: string | null = null;
   isEditing: boolean = false;
   currentParentRut: string | null = null;
+  selectedFile: File | null = null;
+  imagePreview: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -122,10 +124,32 @@ export class ParentComponent implements OnInit {
       try {
         const apoderadoData = this.apoderadoForm.getRawValue();
         
-        // Verificación de RUT duplicado
-        const existingParent = this.apoderados.find(parent => parent.RUT === apoderadoData.RUT);
+        // Handle image upload with old image cleanup
+        if (this.selectedFile) {
+          const oldImageUrl = this.isEditing ? 
+            this.apoderados.find(a => a.RUT === apoderadoData.RUT)?.Imagen : 
+            undefined;
+
+          const imageUrl = await this.firebaseService.uploadImage(
+            this.selectedFile,
+            `apoderados/${apoderadoData.RUT}`, // Organize by parent RUT
+            oldImageUrl
+          );
+          apoderadoData.Imagen = imageUrl;
+        } else if (this.isEditing) {
+          // Keep existing image if no new one is selected
+          const currentParent = this.apoderados.find(a => a.RUT === apoderadoData.RUT);
+          if (currentParent) {
+            apoderadoData.Imagen = currentParent.Imagen;
+          }
+        }
         
-        if (existingParent && !this.isEditing) {
+        // Verificación de RUT duplicado
+        const existingParent = this.apoderados.find(parent => 
+          parent.RUT === apoderadoData.RUT && !this.isEditing
+        );
+        
+        if (existingParent) {
           alert('Ya existe un apoderado con este RUT. Por favor, use un RUT diferente.');
           return;
         }
@@ -140,7 +164,9 @@ export class ParentComponent implements OnInit {
 
         this.resetForm();
         this.loadApoderados();
+        alert('Apoderado guardado exitosamente');
       } catch (error) {
+        console.error('Error al guardar el apoderado:', error);
         alert('Ocurrió un error al guardar el apoderado. Por favor, intente nuevamente.');
       }
     }
@@ -150,15 +176,38 @@ export class ParentComponent implements OnInit {
   editApoderado(apoderado: Apoderado) {
     this.isEditing = true;
     this.currentParentRut = apoderado.RUT;
-    this.apoderadoForm.patchValue(apoderado);
     
-    // Deshabilita campos que no se deben editar
+    // Primero resetear el formulario
+    this.apoderadoForm.reset();
+    
+    // Luego cargar los valores del apoderado
+    this.apoderadoForm.patchValue({
+      Apellido: apoderado.Apellido,
+      Nombre: apoderado.Nombre,
+      RUT: apoderado.RUT,
+      Email: apoderado.Email,
+      Telefono: apoderado.Telefono,
+      FK_APColegio: apoderado.FK_APColegio,
+      Imagen: apoderado.Imagen
+    });
+
+    // Deshabilitar RUT y Email durante la edición
     this.apoderadoForm.get('RUT')?.disable();
     this.apoderadoForm.get('Email')?.disable();
     
-    // Elimina validación de contraseña en modo edición
+    // Eliminar validación de contraseña en modo edición
     this.apoderadoForm.get('password')?.clearValidators();
     this.apoderadoForm.get('password')?.updateValueAndValidity();
+    
+    // Actualizar la vista previa de la imagen si existe
+    if (apoderado.Imagen) {
+      this.imagePreview = apoderado.Imagen;
+    }
+
+    // Asegurarse de que el selector de colegio tenga la opción correcta
+    if (apoderado.FK_APColegio) {
+      this.apoderadoForm.get('FK_APColegio')?.setValue(apoderado.FK_APColegio);
+    }
   }
 
   // Método para reiniciar el formulario
@@ -173,13 +222,46 @@ export class ParentComponent implements OnInit {
     
     this.apoderadoForm.get('password')?.setValidators([Validators.required, Validators.minLength(6)]);
     this.apoderadoForm.get('password')?.updateValueAndValidity();
+    
+    // Reset image-related states
+    this.selectedFile = null;
+    this.imagePreview = null;
+    
+    // Reset file input
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
   }
 
   // Método para eliminar un apoderado
   async deleteApoderado(rut: string) {
     if (confirm('¿Estás seguro de que quieres eliminar este apoderado?')) {
-      await this.firebaseService.deleteApoderado(rut);
-      this.loadApoderados();
+      try {
+        const apoderadoToDelete = this.apoderados.find(a => a.RUT === rut);
+        if (apoderadoToDelete?.Imagen) {
+          await this.firebaseService.deleteImage(apoderadoToDelete.Imagen);
+        }
+        await this.firebaseService.deleteApoderado(rut);
+        this.loadApoderados();
+      } catch (error) {
+        console.error('Error al eliminar el apoderado:', error);
+        alert('Ocurrió un error al eliminar el apoderado. Por favor, intente nuevamente.');
+      }
+    }
+  }
+
+  async onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.imagePreview = e.target.result;
+      };
+      reader.readAsDataURL(file);
     }
   }
 }

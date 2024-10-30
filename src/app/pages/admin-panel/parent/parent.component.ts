@@ -22,6 +22,8 @@ export class ParentComponent implements OnInit {
   colleges: College[] = [];
   collegeMap: Map<string, string> = new Map();
   currentAdminCollege: string | null = null;
+  isEditing: boolean = false;
+  currentParentRut: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -117,24 +119,38 @@ export class ParentComponent implements OnInit {
   async onSubmit() {
     if (this.apoderadoForm.valid) {
       const apoderadoData = this.apoderadoForm.value;
-      if (this.currentAdminCollege) {
-        apoderadoData.FK_APColegio = this.currentAdminCollege;
-      }
+      
       try {
+        const existingParent = this.apoderados.find(parent => parent.RUT === apoderadoData.RUT);
+        
+        if (existingParent && !this.isEditing) {
+          alert('Ya existe un apoderado con este RUT. Por favor, use un RUT diferente.');
+          return;
+        }
+
         await this.firebaseService.addOrUpdateApoderado(apoderadoData);
-        console.log('Apoderado saved successfully');
+        console.log('Apoderado guardado exitosamente');
         this.apoderadoForm.reset();
+        this.isEditing = false;
+        this.currentParentRut = null;
         this.loadApoderados();
       } catch (error) {
-        console.error('Error submitting apoderado:', error);
+        console.error('Error al guardar el apoderado:', error);
+        alert('Ocurrió un error al guardar el apoderado. Por favor, intente nuevamente.');
       }
-    } else {
-      console.log('Form is invalid', this.apoderadoForm.errors);
     }
   }
 
   editApoderado(apoderado: Apoderado) {
+    this.isEditing = true;
+    this.currentParentRut = apoderado.RUT;
     this.apoderadoForm.patchValue(apoderado);
+  }
+
+  resetForm() {
+    this.apoderadoForm.reset();
+    this.isEditing = false;
+    this.currentParentRut = null;
   }
 
   async deleteApoderado(rut: string) {

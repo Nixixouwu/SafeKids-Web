@@ -24,6 +24,8 @@ export class StudentComponent implements OnInit, AfterViewInit {
   apoderadoCollegeMap: Map<string, string> = new Map();
   collegeMap: Map<string, string> = new Map();
   currentAdminCollege: string | null = null;
+  isEditing: boolean = false;
+  currentStudentRut: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -169,28 +171,39 @@ export class StudentComponent implements OnInit, AfterViewInit {
 
   async onSubmit() {
     if (this.alumnoForm.valid) {
-      const alumnoData = this.alumnoForm.getRawValue(); // This gets all values, including disabled fields
+      const alumnoData = this.alumnoForm.getRawValue();
+      
       try {
+        const existingStudent = this.alumnos.find(student => student.RUT === alumnoData.RUT);
+        
+        if (existingStudent && !this.isEditing) {
+          alert('Ya existe un alumno con este RUT. Por favor, use un RUT diferente.');
+          return;
+        }
+
         await this.firebaseService.addOrUpdateAlumno(alumnoData);
-        console.log('Alumno saved successfully');
+        console.log('Alumno guardado exitosamente');
         this.alumnoForm.reset();
+        this.isEditing = false;
+        this.currentStudentRut = null;
         this.loadAlumnos();
       } catch (error) {
-        console.error('Error submitting alumno:', error);
+        console.error('Error al guardar el alumno:', error);
+        alert('Ocurrió un error al guardar el alumno. Por favor, intente nuevamente.');
       }
-    } else {
-      console.log('Form is invalid', this.alumnoForm.errors);
     }
   }
 
   editAlumno(alumno: Alumno) {
+    this.isEditing = true;
+    this.currentStudentRut = alumno.RUT;
     this.alumnoForm.patchValue(alumno);
-    // Check if the apoderado is set and disable the college field if necessary
-    if (alumno.FK_ALApoderado) {
-      this.alumnoForm.get('FK_ALColegio')?.disable();
-    } else {
-      this.alumnoForm.get('FK_ALColegio')?.enable();
-    }
+  }
+
+  resetForm() {
+    this.alumnoForm.reset();
+    this.isEditing = false;
+    this.currentStudentRut = null;
   }
 
   async deleteAlumno(rut: string) {

@@ -27,7 +27,6 @@ export interface College {
   Direccion: string;
   Email: string;
   Encargado: string;
-  ID: number;
   Nombre: string;
   Telefono: string;
 }
@@ -224,14 +223,14 @@ export class FirebaseService {
 
   private async getNextCollegeId(): Promise<number> {
     const collegesRef = collection(this.firestore, 'Colegio');
-    const q = query(collegesRef, orderBy('ID', 'desc'), limit(1));
+    const q = query(collegesRef, orderBy('id', 'desc'), limit(1));
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
       return 1; // Start with 1 if no colleges exist
     } else {
       const highestIdDoc = querySnapshot.docs[0].data() as College;
-      return highestIdDoc['ID'] + 1;
+      return parseInt(highestIdDoc.id) + 1;
     }
   }
 
@@ -242,8 +241,7 @@ export class FirebaseService {
       
       const newCollege: College = {
         ...collegeData,
-        id: newId.toString(),
-        ID: newId
+        id: newId.toString()
       };
 
       await setDoc(newCollegeRef, newCollege);
@@ -651,9 +649,26 @@ export class FirebaseService {
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as Conductor) }));
   }
 
-  async addOrUpdateColegio(colegioData: College): Promise<void> {
-    const colegioDocRef = doc(this.firestore, 'Colegio', colegioData.id);
-    await setDoc(colegioDocRef, colegioData, { merge: true }); // Use merge: true to update
+  async addOrUpdateColegio(colegioData: Partial<College>): Promise<void> {
+    try {
+      if (colegioData.id) {
+        // Update existing college
+        const colegioDocRef = doc(this.firestore, 'Colegio', colegioData.id);
+        await updateDoc(colegioDocRef, colegioData);
+      } else {
+        // Add new college
+        const newId = (await this.getNextCollegeId()).toString(); // Convert to string immediately
+        const newCollege: College = {
+          ...colegioData as Omit<College, 'id'>,
+          id: newId
+        };
+        const colegioDocRef = doc(this.firestore, 'Colegio', newId);
+        await setDoc(colegioDocRef, newCollege);
+      }
+    } catch (error) {
+      console.error('Error in addOrUpdateColegio:', error);
+      throw error;
+    }
   }
 
 }

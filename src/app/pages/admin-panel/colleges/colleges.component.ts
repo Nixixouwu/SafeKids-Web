@@ -15,6 +15,8 @@ export class CollegesComponent implements OnInit {
   colegioForm: FormGroup;
   colegios: College[] = [];
   editingCollegeId: string | null = null; // Track the ID of the college being edited
+  isEditing: boolean = false;
+  currentCollegeId: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -39,31 +41,37 @@ export class CollegesComponent implements OnInit {
 
   async onSubmit() {
     if (this.colegioForm.valid) {
-      const colegioData = this.colegioForm.value;
       try {
-        if (this.editingCollegeId) {
-          // Update existing college
-          await this.firebaseService.addOrUpdateColegio({ ...colegioData, id: this.editingCollegeId });
-          console.log('College updated successfully');
-        } else {
-          // Add new college
-          const newId = await this.firebaseService.addCollege(colegioData);
-          console.log('New college added with ID:', newId);
+        const colegioData = this.colegioForm.value;
+        
+        if (this.isEditing && this.currentCollegeId) {
+          // If editing, include the ID
+          colegioData.id = this.currentCollegeId;
         }
+
+        await this.firebaseService.addOrUpdateColegio(colegioData);
+        console.log('Colegio guardado exitosamente');
         this.colegioForm.reset();
-        this.editingCollegeId = null; // Reset the editing ID
+        this.isEditing = false;
+        this.currentCollegeId = null;
         this.loadColegios();
       } catch (error) {
-        console.error('Error submitting college:', error);
+        console.error('Error al guardar el colegio:', error);
+        alert('Ocurrió un error al guardar el colegio. Por favor, intente nuevamente.');
       }
-    } else {
-      console.log('Form is invalid', this.colegioForm.errors);
     }
   }
 
   editColegio(colegio: College) {
+    this.isEditing = true;
+    this.currentCollegeId = colegio.id;
     this.colegioForm.patchValue(colegio);
-    this.editingCollegeId = colegio.id; // Set the ID of the college being edited
+  }
+
+  resetForm() {
+    this.colegioForm.reset();
+    this.isEditing = false;
+    this.currentCollegeId = null;
   }
 
   async deleteColegio(id: string) {

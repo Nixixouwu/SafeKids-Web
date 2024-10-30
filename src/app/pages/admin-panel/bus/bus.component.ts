@@ -25,6 +25,10 @@ export class BusComponent implements OnInit {
   isEditing: boolean = false;
   currentBusId: string | null = null;
 
+  // Agregar variables para manejo de imágenes
+  selectedFile: File | null = null;
+  imagePreview: string | null = null;
+
   constructor(
     private fb: FormBuilder,
     private firebaseService: FirebaseService,
@@ -70,25 +74,56 @@ export class BusComponent implements OnInit {
     );
   }
 
+  // Método para manejar la selección de archivo
+  async onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+      
+      // Crear preview de la imagen
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.imagePreview = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
   // Método para manejar el envío del formulario
   async onSubmit() {
     if (this.busForm.valid) {
-      const busData: Bus = this.busForm.value;
-      
       try {
-        // Verificación de placa duplicada
-        const existingBus = this.buses.find(bus => bus.ID_Placa === busData.ID_Placa);
-        
-        if (existingBus && !this.isEditing) {
-          alert('Ya existe un bus con esta placa. Por favor, use una placa diferente.');
-          return;
+        const busData: Bus = {
+          ...this.busForm.getRawValue(),
+        };
+
+        // Handle image upload with old image cleanup
+        if (this.selectedFile) {
+          const oldImageUrl = this.isEditing ? 
+            this.buses.find(b => b.ID_Placa === busData.ID_Placa)?.Imagen : 
+            undefined;
+
+          const imageUrl = await this.firebaseService.uploadImage(
+            this.selectedFile,
+            `buses/${busData.ID_Placa}`, // Organize by bus ID
+            oldImageUrl
+          );
+          busData.Imagen = imageUrl;
+        } else if (this.isEditing) {
+          // Keep existing image if no new one is selected
+          const currentBus = this.buses.find(bus => bus.ID_Placa === busData.ID_Placa);
+          if (currentBus) {
+            busData.Imagen = currentBus.Imagen;
+          }
         }
 
-        // Guardado o actualización del bus
+        // Save bus data
         await this.firebaseService.addOrUpdateBus(busData);
         this.resetForm();
         this.loadBuses();
+        alert('Bus guardado exitosamente');
       } catch (error) {
+        console.error('Error al guardar el bus:', error);
         alert('Ocurrió un error al guardar el bus. Por favor, intente nuevamente.');
       }
     }
@@ -98,8 +133,47 @@ export class BusComponent implements OnInit {
   editBus(bus: Bus) {
     this.isEditing = true;
     this.currentBusId = bus.ID_Placa;
-    this.busForm.patchValue(bus);
-    this.busForm.get('ID_Placa')?.disable();
+    
+    // Primero cargar los colegios y conductores si es necesario
+    Promise.all([
+      this.loadColleges(),
+      this.loadConductores()
+    ]).then(() => {
+      // Resetear el formulario antes de cargar los nuevos valores
+      this.busForm.reset();
+      
+      // Cargar los valores del bus
+      this.busForm.patchValue({
+        FK_BUColegio: bus.FK_BUColegio,
+        FK_BUConductor: bus.FK_BUConductor,
+        ID_Placa: bus.ID_Placa,
+        Imagen: bus.Imagen,
+        Modelo: bus.Modelo
+      });
+
+      // Deshabilitar el campo ID_Placa durante la edición
+      this.busForm.get('ID_Placa')?.disable();
+      
+      // Actualizar la vista previa de la imagen si existe
+      if (bus.Imagen) {
+        this.imagePreview = bus.Imagen;
+      }
+
+      // Asegurarse de que los selectores tengan las opciones correctas
+      if (bus.FK_BUColegio) {
+        const college = this.colleges.find(c => c.id === bus.FK_BUColegio);
+        if (college) {
+          this.busForm.get('FK_BUColegio')?.setValue(college.id);
+        }
+      }
+
+      if (bus.FK_BUConductor) {
+        const conductor = this.conductores.find(c => c.RUT === bus.FK_BUConductor);
+        if (conductor) {
+          this.busForm.get('FK_BUConductor')?.setValue(conductor.RUT);
+        }
+      }
+    });
   }
 
   // Método para reiniciar el formulario
@@ -108,13 +182,35 @@ export class BusComponent implements OnInit {
     this.isEditing = false;
     this.currentBusId = null;
     this.busForm.get('ID_Placa')?.enable();
+    
+    // Reinicio de variables de imagen
+    this.selectedFile = null;
+    this.imagePreview = null;
+    
+    // También reiniciar el elemento de entrada de archivo
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
   }
 
   // Método para eliminar un bus
   async deleteBus(idPlaca: string) {
     if (confirm('¿Estás seguro de que quieres eliminar este bus?')) {
-      await this.firebaseService.deleteBus(idPlaca);
-      this.loadBuses();
+      try {
+        // Obtener los datos del bus para acceder a la URL de la imagen
+        const busToDelete = this.buses.find(bus => bus.ID_Placa === idPlaca);
+        if (busToDelete?.Imagen) {
+          // Eliminar la imagen primero
+          await this.firebaseService.deleteImage(busToDelete.Imagen);
+        }
+        // Luego eliminar el documento del bus
+        await this.firebaseService.deleteBus(idPlaca);
+        this.loadBuses();
+      } catch (error) {
+        console.error('Error al eliminar el bus:', error);
+        alert('Ocurrió un error al eliminar el bus. Por favor, intente nuevamente.');
+      }
     }
   }
 

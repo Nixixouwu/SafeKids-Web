@@ -5,8 +5,9 @@
       <div class="col-md-6">
         <div class="form-floating mb-3">
           <select class="form-select" id="fk_bucolegio" formControlName="FK_BUColegio">
-            <option value="" disabled selected></option>
-            <option *ngFor="let college of colleges" [value]="college.id">
+            <option value="" disabled>Seleccione un colegio</option>
+            <option *ngFor="let college of colleges" [value]="college.id"
+              [selected]="busForm.get('FK_BUColegio')?.value === college.id">
               {{ college.Nombre }}
             </option>
           </select>
@@ -16,8 +17,9 @@
       <div class="col-md-6">
         <div class="form-floating mb-3">
           <select class="form-select" id="fk_buconductor" formControlName="FK_BUConductor">
-            <option value="" disabled selected></option>
-            <option *ngFor="let conductor of conductores" [value]="conductor.RUT">
+            <option value="" disabled>Seleccione un conductor</option>
+            <option *ngFor="let conductor of conductores" [value]="conductor.RUT"
+              [selected]="busForm.get('FK_BUConductor')?.value === conductor.RUT">
               {{ conductor.Nombre }} {{ conductor.Apellido }} ({{ conductor.RUT }})
             </option>
           </select>
@@ -32,8 +34,22 @@
       </div>
       <div class="col-md-6">
         <div class="form-floating mb-3">
-          <input type="text" class="form-control" id="imagen" formControlName="Imagen" placeholder="URL de la imagen">
-          <label for="imagen">URL de la imagen</label>
+          <input 
+            type="file" 
+            class="form-control" 
+            id="imagen"
+            (change)="onFileSelected($event)"
+            accept="image/*"
+            #fileInput>
+          <label for="imagen" class="form-label">Imagen del Bus</label>
+        </div>
+        
+        <!-- Preview de la imagen -->
+        <div *ngIf="imagePreview || busForm.get('Imagen')?.value" class="mb-3">
+          <img 
+            [src]="imagePreview || busForm.get('Imagen')?.value" 
+            alt="Preview"
+            class="img-preview">
         </div>
       </div>
       <div class="col-md-6">

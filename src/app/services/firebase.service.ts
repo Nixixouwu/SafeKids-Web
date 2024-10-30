@@ -3,6 +3,7 @@ import { Auth, deleteUser, getAuth, signInWithEmailAndPassword, User, createUser
 import { Firestore, doc, deleteDoc, collection, query, where, getDocs, getDoc, setDoc, addDoc, updateDoc, orderBy, limit } from '@angular/fire/firestore';
 import { FirebaseApp, deleteApp, FirebaseError, getApp, initializeApp } from '@angular/fire/app';
 import { Observable } from 'rxjs';
+import { Storage, ref, uploadBytes, getDownloadURL, deleteObject } from '@angular/fire/storage';
 
 export interface AdminData {
   Email: string;
@@ -83,7 +84,8 @@ export class FirebaseService {
   //Constructor del servicio
   constructor(
     private auth: Auth,
-    private firestore: Firestore
+    private firestore: Firestore,
+    private storage: Storage
   ) {}
   //Obtiene la aplicación de administrador
   private getAdminApp(): FirebaseApp {
@@ -714,6 +716,49 @@ export class FirebaseService {
     const q = query(busesCollection, where('FK_BUColegio', '==', collegeId));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as Bus) }));
+  }
+
+  async uploadImage(file: File, path: string, oldImageUrl?: string): Promise<string> {
+    try {
+      // If there's an old image, delete it first
+      if (oldImageUrl) {
+        try {
+          const oldImageRef = ref(this.storage, oldImageUrl);
+          await deleteObject(oldImageRef);
+        } catch (error) {
+          console.warn('Error deleting old image:', error);
+          // Continue with upload even if delete fails
+        }
+      }
+
+      // Create a more organized path with entity type and ID
+      const timestamp = new Date().getTime();
+      const filePath = `${path}/${timestamp}_${file.name}`;
+      const storageRef = ref(this.storage, filePath);
+
+      // Upload the new file
+      const snapshot = await uploadBytes(storageRef, file);
+      
+      // Get and return the download URL
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      return downloadURL;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw error;
+    }
+  }
+
+  // Add a method to delete images
+  async deleteImage(imageUrl: string): Promise<void> {
+    if (!imageUrl) return;
+
+    try {
+      const imageRef = ref(this.storage, imageUrl);
+      await deleteObject(imageRef);
+    } catch (error) {
+      console.error('Error deleting image:', error);
+      throw error;
+    }
   }
 
 }

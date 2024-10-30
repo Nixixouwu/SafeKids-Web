@@ -116,3 +116,43 @@ h2 {
       border-color: #ff0000;
     }
   }
+
+  .img-preview {
+    max-width: 10rem;
+    max-height: 10rem;
+    border-radius: 1rem;
+    box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
+    margin-top: 1rem;
+  }
+
+  .form-floating {
+    position: relative;
+    
+    input[type="file"] {
+      height: auto;
+      padding-left: 0.75rem;
+      background-color: rgba(255, 255, 255, 0.9);
+      cursor: pointer;
+      
+      &::-webkit-file-upload-button {
+        visibility: hidden;
+        width: 0;
+      }
+      
+      &::before {
+        content: 'Seleccionar archivo';
+        display: inline-block;
+        background: transparent;
+        outline: none;
+        white-space: nowrap;
+        cursor: pointer;
+      }
+      
+      &:hover,
+      &:focus {
+        outline: none;
+        box-shadow: none;
+        border-color: transparent;
+      }
+    }
+  }

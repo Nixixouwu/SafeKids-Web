@@ -27,6 +27,8 @@ export class StudentComponent implements OnInit, AfterViewInit {
   currentAdminCollege: string | null = null;
   isEditing: boolean = false;
   currentStudentRut: string | null = null;
+  selectedFile: File | null = null;
+  imagePreview: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -173,22 +175,45 @@ export class StudentComponent implements OnInit, AfterViewInit {
   // Método para manejar el envío del formulario
   async onSubmit() {
     if (this.alumnoForm.valid) {
-      const alumnoData = this.alumnoForm.getRawValue();
-      
       try {
-        // Verificación de RUT duplicado
-        const existingStudent = this.alumnos.find(student => student.RUT === alumnoData.RUT);
+        const alumnoData = this.alumnoForm.getRawValue();
         
-        if (existingStudent && !this.isEditing) {
+        // Handle image upload with old image cleanup
+        if (this.selectedFile) {
+          const oldImageUrl = this.isEditing ? 
+            this.alumnos.find(a => a.RUT === alumnoData.RUT)?.Imagen : 
+            undefined;
+
+          const imageUrl = await this.firebaseService.uploadImage(
+            this.selectedFile,
+            `alumnos/${alumnoData.RUT}`, // Organize by student RUT
+            oldImageUrl
+          );
+          alumnoData.Imagen = imageUrl;
+        } else if (this.isEditing) {
+          // Keep existing image if no new one is selected
+          const currentStudent = this.alumnos.find(a => a.RUT === alumnoData.RUT);
+          if (currentStudent) {
+            alumnoData.Imagen = currentStudent.Imagen;
+          }
+        }
+
+        // Verificación de RUT duplicado
+        const existingStudent = this.alumnos.find(student => 
+          student.RUT === alumnoData.RUT && !this.isEditing
+        );
+        
+        if (existingStudent) {
           alert('Ya existe un alumno con este RUT. Por favor, use un RUT diferente.');
           return;
         }
 
-        // Guardado o actualización del alumno
         await this.firebaseService.addOrUpdateAlumno(alumnoData);
         this.resetForm();
         this.loadAlumnos();
+        alert('Alumno guardado exitosamente');
       } catch (error) {
+        console.error('Error al guardar el alumno:', error);
         alert('Ocurrió un error al guardar el alumno. Por favor, intente nuevamente.');
       }
     }
@@ -198,8 +223,31 @@ export class StudentComponent implements OnInit, AfterViewInit {
   editAlumno(alumno: Alumno) {
     this.isEditing = true;
     this.currentStudentRut = alumno.RUT;
-    this.alumnoForm.patchValue(alumno);
+    
+    // Resetear el formulario antes de cargar los nuevos valores
+    this.alumnoForm.reset();
+    
+    // Cargar los valores del alumno
+    this.alumnoForm.patchValue({
+      Apellido: alumno.Apellido,
+      Curso: alumno.Curso,
+      Direccion: alumno.Direccion,
+      Edad: alumno.Edad,
+      FK_ALApoderado: alumno.FK_ALApoderado,
+      FK_ALColegio: alumno.FK_ALColegio,
+      Genero: alumno.Genero,
+      Imagen: alumno.Imagen,
+      Nombre: alumno.Nombre,
+      RUT: alumno.RUT
+    });
+
+    // Deshabilitar RUT durante la edición
     this.alumnoForm.get('RUT')?.disable();
+    
+    // Actualizar la vista previa de la imagen si existe
+    if (alumno.Imagen) {
+      this.imagePreview = alumno.Imagen;
+    }
   }
 
   // Método para reiniciar el formulario
@@ -208,18 +256,51 @@ export class StudentComponent implements OnInit, AfterViewInit {
     this.isEditing = false;
     this.currentStudentRut = null;
     this.alumnoForm.get('RUT')?.enable();
+    
+    // Reset image-related states
+    this.selectedFile = null;
+    this.imagePreview = null;
+    
+    // Reset file input
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
   }
 
   // Método para eliminar un alumno
   async deleteAlumno(rut: string) {
     if (confirm('¿Estás seguro de que quieres eliminar este alumno?')) {
-      await this.firebaseService.deleteAlumno(rut);
-      this.loadAlumnos();
+      try {
+        const alumnoToDelete = this.alumnos.find(a => a.RUT === rut);
+        if (alumnoToDelete?.Imagen) {
+          await this.firebaseService.deleteImage(alumnoToDelete.Imagen);
+        }
+        await this.firebaseService.deleteAlumno(rut);
+        this.loadAlumnos();
+      } catch (error) {
+        console.error('Error al eliminar el alumno:', error);
+        alert('Ocurrió un error al eliminar el alumno. Por favor, intente nuevamente.');
+      }
     }
   }
 
   // Método auxiliar para obtener el nombre del colegio
   getCollegeName(id: string): string {
     return this.collegeMap.get(id) || 'Unknown College';
+  }
+
+  async onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.imagePreview = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
   }
 }

@@ -116,7 +116,7 @@ export class ConductorComponent implements OnInit {
           ...this.conductorForm.getRawValue()
         };
 
-        // Handle image upload with old image cleanup
+        // Manejar la carga de imagen con limpieza de imagen anterior
         if (this.selectedFile) {
           const oldImageUrl = this.isEditing ? 
             this.conductores.find(c => c.RUT === conductorData.RUT)?.Imagen : 
@@ -124,12 +124,12 @@ export class ConductorComponent implements OnInit {
 
           const imageUrl = await this.firebaseService.uploadImage(
             this.selectedFile,
-            `conductores/${conductorData.RUT}`, // Organize by conductor RUT
-            oldImageUrl  // Pass the old image URL for cleanup
+            `conductores/${conductorData.RUT}`, // Organizar por RUT del conductor
+            oldImageUrl  // Pasar la URL de la imagen anterior para la limpieza
           );
           conductorData.Imagen = imageUrl;
         } else if (this.isEditing) {
-          // Keep existing image if no new one is selected
+          // Mantener la imagen existente si no se selecciona una nueva
           const currentConductor = this.conductores.find(c => c.RUT === conductorData.RUT);
           if (currentConductor) {
             conductorData.Imagen = currentConductor.Imagen;
@@ -146,7 +146,7 @@ export class ConductorComponent implements OnInit {
           return;
         }
 
-        // Save conductor data
+        // Guardar datos del conductor
         await this.firebaseService.addOrUpdateConductor(conductorData);
         this.resetForm();
         this.loadConductores();
@@ -236,24 +236,24 @@ export class ConductorComponent implements OnInit {
     this.conductorForm.get('RUT')?.enable();
     this.conductorForm.get('Email')?.enable();
     
-    // Reset image-related states
+    // Resetear estados de imagen
     this.selectedFile = null;
     this.imagePreview = null;
     
-    // Reset file input
+    // Resetear input de archivo
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     if (fileInput) {
       fileInput.value = '';
     }
   }
 
-  // Add this method to handle file selection
+  // Método para manejar la selección de archivo
   async onFileSelected(event: any) {
     const file = event.target.files[0];
     if (file) {
       this.selectedFile = file;
       
-      // Create preview
+      // Crear vista previa
       const reader = new FileReader();
       reader.onload = (e: any) => {
         this.imagePreview = e.target.result;

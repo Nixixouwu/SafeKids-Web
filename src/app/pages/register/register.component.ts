@@ -86,13 +86,25 @@ export class RegisterComponent implements OnInit {
       return;
     }
 
-    // Envía los datos del formulario a Formspree
-    const formspreeUrl = 'https://formspree.io/f/movagekg';
+    // Obtener los datos del formulario
     const formData = this.registerForm.value;
+    
+    // Buscar el nombre del colegio usando el ID seleccionado
+    const selectedCollege = this.colleges.find(
+      college => college.id === formData.fk_adcolegio
+    );
+    
+    // Crear un nuevo objeto con el nombre del colegio en lugar de ID
+    const formDataToSend = {
+      ...formData,
+      fk_adcolegio: selectedCollege ? selectedCollege.Nombre : 'Unknown College'
+    };
 
+    // Enviar a Formspree
+    const formspreeUrl = 'https://formspree.io/f/movagekg';
+    
     try {
-      // Intenta enviar el formulario y redirige al login si es exitoso
-      const response = await this.http.post(formspreeUrl, formData).toPromise();
+      const response = await this.http.post(formspreeUrl, formDataToSend).toPromise();
       this.router.navigate(['/login']);
     } catch (error) {
       this.errorMessage = 'Error al enviar la solicitud. Por favor, inténtelo de nuevo.';

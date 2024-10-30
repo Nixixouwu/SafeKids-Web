@@ -257,11 +257,11 @@ export class StudentComponent implements OnInit, AfterViewInit {
     this.currentStudentRut = null;
     this.alumnoForm.get('RUT')?.enable();
     
-    // Reset image-related states
+    // Resetear estados de imagen
     this.selectedFile = null;
     this.imagePreview = null;
     
-    // Reset file input
+    // Resetear input de archivo
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     if (fileInput) {
       fileInput.value = '';
@@ -295,7 +295,7 @@ export class StudentComponent implements OnInit, AfterViewInit {
     if (file) {
       this.selectedFile = file;
       
-      // Create preview
+      // Crear vista previa
       const reader = new FileReader();
       reader.onload = (e: any) => {
         this.imagePreview = e.target.result;

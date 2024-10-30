@@ -97,7 +97,7 @@ export class BusComponent implements OnInit {
           ...this.busForm.getRawValue(),
         };
 
-        // Handle image upload with old image cleanup
+        // Manejar la carga de imagen con limpieza de imagen anterior
         if (this.selectedFile) {
           const oldImageUrl = this.isEditing ? 
             this.buses.find(b => b.ID_Placa === busData.ID_Placa)?.Imagen : 
@@ -105,19 +105,19 @@ export class BusComponent implements OnInit {
 
           const imageUrl = await this.firebaseService.uploadImage(
             this.selectedFile,
-            `buses/${busData.ID_Placa}`, // Organize by bus ID
+            `buses/${busData.ID_Placa}`, // Organizar por ID del bus
             oldImageUrl
           );
           busData.Imagen = imageUrl;
         } else if (this.isEditing) {
-          // Keep existing image if no new one is selected
+          // Mantener la imagen existente si no se selecciona una nueva
           const currentBus = this.buses.find(bus => bus.ID_Placa === busData.ID_Placa);
           if (currentBus) {
             busData.Imagen = currentBus.Imagen;
           }
         }
 
-        // Save bus data
+        // Guardar datos del bus
         await this.firebaseService.addOrUpdateBus(busData);
         this.resetForm();
         this.loadBuses();

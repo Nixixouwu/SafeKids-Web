@@ -15,6 +15,7 @@ import { RutFormatterDirective } from '../../../validators/rut-formatter.validat
   styleUrls: ['./admin.component.scss']
 })
 export class AdminComponent implements OnInit {
+  // Declaración de variables
   adminForm: FormGroup;
   admins: AdminData[] = [];
   colleges: College[] = [];
@@ -27,6 +28,7 @@ export class AdminComponent implements OnInit {
     private fb: FormBuilder,
     private firebaseService: FirebaseService
   ) {
+    // Inicialización del formulario con validaciones para administradores
     this.adminForm = this.fb.group({
       rut: ['', [Validators.required, rutValidator()]],
       nombre: ['', [Validators.required, Validators.maxLength(20)]],
@@ -41,6 +43,7 @@ export class AdminComponent implements OnInit {
       isSuperAdmin: [false]
     });
 
+    // Observación para verificar si el usuario actual es superadmin
     this.isSuperAdmin$ = this.firebaseService.getCurrentUser().pipe(
       switchMap(user => user ? from(this.firebaseService.getAdminData(user)) : of(null)),
       map(adminData => adminData?.isSuperAdmin || false),
@@ -50,11 +53,13 @@ export class AdminComponent implements OnInit {
     );
   }
 
+  // Inicialización del componente y carga de datos
   ngOnInit() {
     this.loadAdmins();
     this.loadColleges();
   }
 
+  // Método para cargar la lista de administradores según permisos
   async loadAdmins() {
     if (this.showInactiveAdmins) {
       this.admins = await this.firebaseService.getAdmins();
@@ -63,19 +68,23 @@ export class AdminComponent implements OnInit {
     }
   }
 
+  // Método para alternar la visualización de administradores inactivos
   toggleInactiveAdmins() {
     this.showInactiveAdmins = !this.showInactiveAdmins;
     this.loadAdmins();
   }
 
+  // Método para cargar administradores activos
   async loadActiveAdmins() {
     this.admins = await this.firebaseService.getActiveAdmins();
   }
 
+  // Método para cargar la lista de colegios
   async loadColleges() {
     this.colleges = await this.firebaseService.getColleges();
   }
 
+  // Método para editar un administrador existente
   editAdmin(admin: AdminData) {
     this.isEditing = true;
     this.editingAdminId = admin.rut;
@@ -96,6 +105,7 @@ export class AdminComponent implements OnInit {
     this.adminForm.get('Email')?.disable();
   }
 
+  // Método para cancelar la edición
   cancelEdit() {
     this.isEditing = false;
     this.editingAdminId = null;
@@ -103,6 +113,7 @@ export class AdminComponent implements OnInit {
     this.adminForm.get('rut')?.enable();
   }
 
+  // Método para enviar el formulario
   async onSubmit() {
     if (this.adminForm.valid) {
       try {
@@ -138,11 +149,13 @@ export class AdminComponent implements OnInit {
     }
   }
 
+  // Método para obtener el nombre del colegio
   getCollegeName(collegeId: string): string {
     const college = this.colleges.find(c => c.id === collegeId);
     return college ? college.Nombre : 'N/A';
   }
 
+  // Método para actualizar la asignación de colegio del administrador actual
   updateOwnCollege(event: Event) {
     const selectElement = event.target as HTMLSelectElement;
     const collegeId = selectElement.value;
@@ -163,6 +176,7 @@ export class AdminComponent implements OnInit {
     }
   }
 
+  // Método para desactivar un administrador
   async deactivateAdmin(admin: AdminData) {
     if (confirm(`¿Está seguro de que desea desactivar a ${admin.nombre} ${admin.apellido}?`)) {
       try {
@@ -175,6 +189,7 @@ export class AdminComponent implements OnInit {
     }
   }
 
+  // Método para activar un administrador
   async activateAdmin(admin: AdminData) {
     if (confirm(`¿Está seguro de que desea activar a ${admin.nombre} ${admin.apellido}?`)) {
       try {

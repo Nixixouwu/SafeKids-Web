@@ -223,11 +223,11 @@ export class ParentComponent implements OnInit {
     this.apoderadoForm.get('password')?.setValidators([Validators.required, Validators.minLength(6)]);
     this.apoderadoForm.get('password')?.updateValueAndValidity();
     
-    // Reset image-related states
+    // Resetear estados de imagen
     this.selectedFile = null;
     this.imagePreview = null;
     
-    // Reset file input
+    // Resetear input de archivo
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     if (fileInput) {
       fileInput.value = '';
@@ -256,7 +256,7 @@ export class ParentComponent implements OnInit {
     if (file) {
       this.selectedFile = file;
       
-      // Create preview
+      // Crear vista previa
       const reader = new FileReader();
       reader.onload = (e: any) => {
         this.imagePreview = e.target.result;

@@ -12,6 +12,16 @@
           <i class="bi bi-people-fill me-2"></i> Apoderados
         </a>
       </li>
+      <li class="nav-item">
+        <a class="nav-link text-light" routerLink="./conductores" routerLinkActive="active">
+          <i class="bi bi-person-vcard me-2"></i> Conductor
+        </a>
+      </li> 
+      <li class="nav-item">
+        <a class="nav-link text-light" routerLink="./buses" routerLinkActive="active">
+          <i class="bi bi-bus-front me-2"></i> Bus
+        </a>
+      </li>
       <ng-container *ngIf="isSuperAdmin$ | async">
         <li class="nav-item">
           <a class="nav-link text-light" routerLink="./colegios" routerLinkActive="active">
@@ -21,16 +31,6 @@
         <li class="nav-item">
           <a class="nav-link text-light" routerLink="./administradores" routerLinkActive="active">
             <i class="bi bi-person me-2"></i> Administradores
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link text-light" routerLink="./conductores" routerLinkActive="active">
-            <i class="bi bi-person-vcard me-2"></i> Conductor
-          </a>
-        </li> 
-        <li class="nav-item">
-          <a class="nav-link text-light" routerLink="./buses" routerLinkActive="active">
-            <i class="bi bi-bus-front me-2"></i> Bus
           </a>
         </li>
       </ng-container>

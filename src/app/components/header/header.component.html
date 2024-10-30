@@ -15,7 +15,7 @@
       </ul>
       <div class="d-flex">
         <ng-container *ngIf="user$ | async as user; else notLoggedIn">
-          <button class="btn btn-blue me-2" [routerLink]="['/panel']">PANEL</button>
+          <button class="btn btn-primary me-2" [routerLink]="['/panel']">PANEL</button>
           <button class="btn btn-red" (click)="logout()">CERRAR SESIÓN</button>
         </ng-container>
         <ng-template #notLoggedIn>

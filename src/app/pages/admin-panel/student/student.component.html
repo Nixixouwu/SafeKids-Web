@@ -53,17 +53,6 @@
         </div>
         <div class="col-md-6">
           <div class="form-floating mb-3">
-            <select class="form-select" id="fk_alapoderado" formControlName="FK_ALApoderado">
-              <option value="" disabled selected></option>
-              <option *ngFor="let apoderado of apoderados" [value]="apoderado.RUT">
-                {{ apoderado.Nombre }} {{ apoderado.Apellido }} ({{ apoderado.RUT }})
-              </option>
-            </select>
-            <label for="fk_alapoderado">Apoderado</label>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="form-floating mb-3">
             <select class="form-select" id="fk_alcolegio" formControlName="FK_ALColegio">
               <option value="" disabled selected></option>
               <option *ngFor="let college of colleges" [value]="college.id">

@@ -51,6 +51,7 @@ export class ConductorComponent implements OnInit {
       Email: ['', [Validators.required, Validators.email]],
       FK_COColegio: ['', Validators.required],
       Fecha_Admision: ['', Validators.required],
+      password: ['', [Validators.required, Validators.minLength(6)]],
     });
   }
 
@@ -111,12 +112,9 @@ export class ConductorComponent implements OnInit {
   async onSubmit() {
     if (this.conductorForm.valid) {
       try {
-        // Usar getRawValue() para obtener también los campos deshabilitados
-        const conductorData: Conductor = {
-          ...this.conductorForm.getRawValue()
-        };
+        const conductorData = this.conductorForm.getRawValue();
 
-        // Manejar la carga de imagen con limpieza de imagen anterior
+        // Manejar la carga de imagen (código existente)
         if (this.selectedFile) {
           const oldImageUrl = this.isEditing ? 
             this.conductores.find(c => c.RUT === conductorData.RUT)?.Imagen : 
@@ -136,24 +134,30 @@ export class ConductorComponent implements OnInit {
           }
         }
 
-        // Verificación de RUT duplicado
+        // Verificar RUT duplicado (código existente)
         const existingConductor = this.conductores.find(conductor => 
           conductor.RUT === conductorData.RUT && !this.isEditing
         );
         
         if (existingConductor) {
-          alert('Ya existe un conductor con este RUT. Por favor, use un RUT diferente.');
+          alert('Ya existe un conductor con este RUT.');
           return;
         }
 
-        // Guardar datos del conductor
-        await this.firebaseService.addOrUpdateConductor(conductorData);
+        // Logica diferente para editar vs crear
+        if (this.isEditing) {
+          const { password, ...updateData } = conductorData;
+          await this.firebaseService.addOrUpdateConductor(updateData);
+        } else {
+          await this.firebaseService.createConductorUser(conductorData);
+        }
+
         this.resetForm();
         this.loadConductores();
         alert('Conductor guardado exitosamente');
       } catch (error) {
         console.error('Error al guardar el conductor:', error);
-        alert('Ocurrió un error al guardar el conductor. Por favor, intente nuevamente.');
+        alert('Ocurrió un error al guardar el conductor.');
       }
     }
   }

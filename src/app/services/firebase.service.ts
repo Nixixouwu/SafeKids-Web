@@ -35,7 +35,6 @@ export interface Alumno {
   Curso: string;
   Direccion: string;
   Edad: number;
-  FK_ALApoderado: string;
   FK_ALColegio: string;
   Genero: string;
   Imagen: string;
@@ -48,6 +47,7 @@ export interface Apoderado {
   Apellido: string;
   Email: string;
   FK_APColegio: string;
+  FK_APAlumno: string;
   Imagen: string;
   Nombre: string;
   RUT: string;
@@ -721,26 +721,26 @@ export class FirebaseService {
 
   async uploadImage(file: File, path: string, oldImageUrl?: string): Promise<string> {
     try {
-      // If there's an old image, delete it first
+      //Si hay una imagen anterior, elimina la imagen anterior
       if (oldImageUrl) {
         try {
           const oldImageRef = ref(this.storage, oldImageUrl);
           await deleteObject(oldImageRef);
         } catch (error) {
           console.warn('Error deleting old image:', error);
-          // Continue with upload even if delete fails
+          //Continúa con la carga incluso si la eliminación falla
         }
       }
 
-      // Create a more organized path with entity type and ID
+      // Crea un camino más organizado con el tipo de entidad y el ID
       const timestamp = new Date().getTime();
       const filePath = `${path}/${timestamp}_${file.name}`;
       const storageRef = ref(this.storage, filePath);
 
-      // Upload the new file
+      // Carga el nuevo archivo
       const snapshot = await uploadBytes(storageRef, file);
       
-      // Get and return the download URL
+      // Obtiene y devuelve la URL de descarga
       const downloadURL = await getDownloadURL(snapshot.ref);
       return downloadURL;
     } catch (error) {
@@ -749,7 +749,7 @@ export class FirebaseService {
     }
   }
 
-  // Add a method to delete images
+  // Agrega un método para eliminar imágenes
   async deleteImage(imageUrl: string): Promise<void> {
     if (!imageUrl) return;
 
@@ -758,6 +758,37 @@ export class FirebaseService {
       await deleteObject(imageRef);
     } catch (error) {
       console.error('Error deleting image:', error);
+      throw error;
+    }
+  }
+
+  async createConductorUser(conductorData: Conductor & { password: string }): Promise<void> {
+    try {
+      // Crea una aplicación temporal de Firebase
+      const app = initializeApp(getApp().options, 'conductorCreationApp');
+      const conductorAuth = getAuth(app);
+
+      // Crea un usuario de autenticación
+      const userCredential = await createUserWithEmailAndPassword(
+        conductorAuth, 
+        conductorData.Email, 
+        conductorData.password
+      );
+
+      // Elimina la contraseña antes de almacenar en Firestore
+      const { password, ...conductorDataWithoutPassword } = conductorData;
+
+      // Almacena los datos del conductor en Firestore usando el RUT como ID del documento
+      const conductorDoc = doc(this.firestore, `Conductor/${conductorData.RUT}`);
+      await setDoc(conductorDoc, {
+        ...conductorDataWithoutPassword,
+        uid: userCredential.user.uid  // Almacena el ID de autenticación del usuario para referencia
+      });
+
+      // Limpia la aplicación temporal
+      await deleteApp(app);
+
+    } catch (error) {
       throw error;
     }
   }

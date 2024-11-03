@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { FirebaseService, Apoderado, College } from '../../../services/firebase.service';
+import { FirebaseService, Apoderado, College, Alumno } from '../../../services/firebase.service';
 import { CommonModule } from '@angular/common';
 import { NumbersOnlyDirective } from '../../../validators/numbers-only.validator';
 import { RutFormatterDirective } from '../../../validators/rut-formatter.validator';
@@ -27,6 +27,7 @@ export class ParentComponent implements OnInit {
   currentParentRut: string | null = null;
   selectedFile: File | null = null;
   imagePreview: string | null = null;
+  alumnos: Alumno[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -42,7 +43,8 @@ export class ParentComponent implements OnInit {
       Telefono: ['', Validators.required],
       FK_APColegio: ['', Validators.required],
       Imagen: [''],
-      password: ['', [Validators.required, Validators.minLength(6)]]
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      FK_APAlumno: ['', Validators.required]
     });
   }
 
@@ -50,6 +52,7 @@ export class ParentComponent implements OnInit {
   ngOnInit() {
     this.loadApoderados();
     this.loadColleges();
+    this.loadAlumnos();
   }
 
   // Método para cargar los datos del administrador actual
@@ -118,12 +121,31 @@ export class ParentComponent implements OnInit {
     return this.collegeMap.get(id) || 'Unknown College';
   }
 
+  // Método para cargar la lista de alumnos
+  async loadAlumnos() {
+    try {
+      this.alumnos = await this.firebaseService.getAlumnos();
+    } catch (error) {
+      console.error('Error loading alumnos:', error);
+    }
+  }
+
   // Método para manejar el envío del formulario
   async onSubmit() {
     if (this.apoderadoForm.valid) {
       try {
         const apoderadoData = this.apoderadoForm.getRawValue();
         
+        // Verificar que el alumno no esté ya asignado a otro apoderado
+        const existingApoderado = this.apoderados.find(
+          ap => ap.FK_APAlumno === apoderadoData.FK_APAlumno && ap.RUT !== apoderadoData.RUT
+        );
+        
+        if (existingApoderado) {
+          alert('Este alumno ya tiene un apoderado asignado.');
+          return;
+        }
+
         // Handle image upload with old image cleanup
         if (this.selectedFile) {
           const oldImageUrl = this.isEditing ? 

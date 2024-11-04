@@ -40,12 +40,20 @@ export class StudentComponent implements OnInit, AfterViewInit {
       Nombre: ['', [
         Validators.required,
         Validators.minLength(2),
+        Validators.maxLength(50),
         Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
       ]],
       Apellido: ['', [
         Validators.required,
         Validators.minLength(2),
+        Validators.maxLength(50),
         Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
+      ]],
+      Email: ['', [
+        Validators.required,
+        Validators.email,
+        Validators.maxLength(100),
+        Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
       ]],
       RUT: ['', [
         Validators.required,
@@ -352,16 +360,29 @@ export class StudentComponent implements OnInit, AfterViewInit {
       Nombre: ['', [
         Validators.required,
         Validators.minLength(2),
+        Validators.maxLength(50),
         Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
       ]],
       Apellido: ['', [
         Validators.required,
         Validators.minLength(2),
+        Validators.maxLength(50),
         Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
+      ]],
+      Email: ['', [
+        Validators.required,
+        Validators.email,
+        Validators.maxLength(100),
+        Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
       ]],
       RUT: ['', [
         Validators.required,
         rutValidator()
+      ]],
+      Edad: ['', [
+        Validators.required,
+        Validators.min(4),
+        Validators.max(20)
       ]],
       Curso: ['', [
         Validators.required,
@@ -371,11 +392,6 @@ export class StudentComponent implements OnInit, AfterViewInit {
         Validators.required,
         Validators.minLength(5),
         Validators.maxLength(100)
-      ]],
-      Edad: ['', [
-        Validators.required,
-        Validators.min(4),
-        Validators.max(20)
       ]],
       FK_ALColegio: ['', Validators.required],
       Genero: ['', Validators.required],

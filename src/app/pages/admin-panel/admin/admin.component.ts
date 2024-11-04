@@ -28,16 +28,46 @@ export class AdminComponent implements OnInit {
     private fb: FormBuilder,
     private firebaseService: FirebaseService
   ) {
-    // Inicialización del formulario con validaciones para administradores
+    // Inicialización del formulario con validaciones mejoradas
     this.adminForm = this.fb.group({
-      rut: ['', [Validators.required, rutValidator()]],
-      nombre: ['', [Validators.required, Validators.maxLength(20)]],
-      apellido: ['', [Validators.required, Validators.maxLength(20)]],
-      Email: ['', [Validators.required, Validators.email, Validators.maxLength(50)]],
-      password: [''],
+      nombre: ['', [
+        Validators.required,
+        Validators.minLength(2),
+        Validators.maxLength(50),
+        Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
+      ]],
+      apellido: ['', [
+        Validators.required,
+        Validators.minLength(2),
+        Validators.maxLength(50),
+        Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
+      ]],
+      rut: ['', [
+        Validators.required,
+        rutValidator()
+      ]],
+      Email: ['', [
+        Validators.required,
+        Validators.email,
+        Validators.maxLength(100),
+        Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
+      ]],
+      password: ['', [
+        Validators.required,
+        Validators.minLength(6),
+        Validators.pattern(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/)
+      ]],
       currentPassword: [''],
-      newPassword: [''],
-      telefono: ['', [Validators.required, Validators.maxLength(20)]],
+      newPassword: ['', [
+        Validators.minLength(6),
+        Validators.pattern(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/)
+      ]],
+      telefono: ['', [
+        Validators.required,
+        Validators.minLength(8),
+        Validators.maxLength(15),
+        Validators.pattern(/^\+?[0-9]{8,15}$/)
+      ]],
       fk_adcolegio: ['', Validators.required],
       Rol: ['Admin', Validators.required],
       isSuperAdmin: [false]

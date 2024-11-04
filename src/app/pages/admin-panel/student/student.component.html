@@ -73,23 +73,36 @@
         </div>
         <div class="col-md-6">
           <div class="form-floating mb-3">
-            <select class="form-select" id="genero" formControlName="Genero">
-              <option value="" disabled selected></option>
-              <option value="Hombre">Hombre</option>
-              <option value="Mujer">Mujer</option>
+            <select class="form-select" 
+                    id="genero" 
+                    formControlName="Genero"
+                    [class.is-invalid]="alumnoForm.get('Genero')?.invalid && alumnoForm.get('Genero')?.touched">
+              <option value="" disabled>Seleccione un género</option>
+              <option value="Masculino">Masculino</option>
+              <option value="Femenino">Femenino</option>
+              <option value="Otro">Otro</option>
             </select>
             <label for="genero">Género</label>
+            <div class="invalid-feedback">
+              El género es requerido
+            </div>
           </div>
         </div>
         <div class="col-md-6">
           <div class="form-floating mb-3">
-            <select class="form-select" id="fk_alcolegio" formControlName="FK_ALColegio">
-              <option value="" disabled selected></option>
+            <select class="form-select" 
+                    id="fk_alcolegio" 
+                    formControlName="FK_ALColegio"
+                    [class.is-invalid]="alumnoForm.get('FK_ALColegio')?.invalid && alumnoForm.get('FK_ALColegio')?.touched">
+              <option value="" disabled>Seleccione un colegio</option>
               <option *ngFor="let college of colleges" [value]="college.id">
                 {{ college.Nombre }}
               </option>
             </select>
             <label for="fk_alcolegio">Colegio</label>
+            <div class="invalid-feedback">
+              El colegio es requerido
+            </div>
           </div>
         </div>
        

@@ -4,32 +4,52 @@
       <div class="row g-3">
         <div class="col-md-6">
           <div class="form-floating mb-3">
-            <input type="text" class="form-control" id="nombre" formControlName="Nombre" placeholder="Nombre del Colegio" maxlength="50">
+            <input type="text" class="form-control" id="nombre" formControlName="Nombre" placeholder="Nombre del Colegio" maxlength="50" [class.is-invalid]="colegioForm.get('Nombre')?.invalid && colegioForm.get('Nombre')?.touched">
             <label for="nombre">Nombre del Colegio</label>
+            <div class="invalid-feedback">
+              El nombre del colegio es requerido
+            </div>
           </div>
         </div>
         <div class="col-md-6">
           <div class="form-floating mb-3">
-            <input type="text" class="form-control" id="direccion" formControlName="Direccion" placeholder="Dirección" maxlength="100">
+            <input type="text" class="form-control" id="direccion" formControlName="Direccion" placeholder="Dirección" maxlength="100" [class.is-invalid]="colegioForm.get('Direccion')?.invalid && colegioForm.get('Direccion')?.touched">
             <label for="direccion">Dirección</label>
+            <div class="invalid-feedback">
+              La dirección es requerida
+            </div>
           </div>
         </div>
         <div class="col-md-6">
           <div class="form-floating mb-3">
-            <input type="email" class="form-control" id="email" formControlName="Email" placeholder="Email" maxlength="100">
+            <input type="email" class="form-control" id="email" formControlName="Email" placeholder="Email" maxlength="100" [class.is-invalid]="colegioForm.get('Email')?.invalid && colegioForm.get('Email')?.touched">
             <label for="email">Email</label>
+            <div class="invalid-feedback">
+              <span *ngIf="colegioForm.get('Email')?.errors?.['required']">
+                El email es requerido
+              </span>
+              <span *ngIf="colegioForm.get('Email')?.errors?.['email']">
+                Email inválido
+              </span>
+            </div>
           </div>
         </div>
         <div class="col-md-6">
           <div class="form-floating mb-3">
-            <input type="tel" class="form-control" id="telefono" formControlName="Telefono" placeholder="Teléfono" maxlength="15" appNumbersOnly>
+            <input type="tel" class="form-control" id="telefono" formControlName="Telefono" placeholder="Teléfono" maxlength="15" appNumbersOnly [class.is-invalid]="colegioForm.get('Telefono')?.invalid && colegioForm.get('Telefono')?.touched">
             <label for="telefono">Teléfono</label>
+            <div class="invalid-feedback">
+              El teléfono es requerido
+            </div>
           </div>
         </div>
         <div class="col-md-6">
           <div class="form-floating mb-3">
-            <input type="text" class="form-control" id="encargado" formControlName="Encargado" placeholder="Director" maxlength="50">
+            <input type="text" class="form-control" id="encargado" formControlName="Encargado" placeholder="Director" maxlength="50" [class.is-invalid]="colegioForm.get('Encargado')?.invalid && colegioForm.get('Encargado')?.touched">
             <label for="encargado">Director</label>
+            <div class="invalid-feedback">
+              El nombre del director es requerido
+            </div>
           </div>
         </div>
       </div>

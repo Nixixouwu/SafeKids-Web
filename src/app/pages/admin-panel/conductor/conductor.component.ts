@@ -75,12 +75,18 @@ export class ConductorComponent implements OnInit {
       Edad: ['', [
         Validators.required,
         Validators.min(18),
-        Validators.max(65)
+        Validators.max(65),
+        Validators.pattern(/^\d{1,2}$/)
       ]],
       Genero: ['', Validators.required],
       FK_COColegio: ['', Validators.required],
       Fecha_Admision: ['', Validators.required],
-      Imagen: ['']
+      Imagen: [''],
+      password: ['', [
+        Validators.required,
+        Validators.minLength(6),
+        Validators.pattern(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/)
+      ]]
     });
   }
 
@@ -235,6 +241,10 @@ export class ConductorComponent implements OnInit {
     if (conductor.Fecha_Admision) {
       this.conductorForm.get('Fecha_Admision')?.setValue(conductor.Fecha_Admision);
     }
+
+    // Remove password validation in edit mode
+    this.conductorForm.get('password')?.clearValidators();
+    this.conductorForm.get('password')?.updateValueAndValidity();
   }
 
   // Método para eliminar un conductor
@@ -278,6 +288,14 @@ export class ConductorComponent implements OnInit {
     if (fileInput) {
       fileInput.value = '';
     }
+    
+    // Restore password validation
+    this.conductorForm.get('password')?.setValidators([
+      Validators.required, 
+      Validators.minLength(6),
+      Validators.pattern(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/)
+    ]);
+    this.conductorForm.get('password')?.updateValueAndValidity();
   }
 
   // Método para manejar la selección de archivo

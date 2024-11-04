@@ -694,30 +694,22 @@ export class FirebaseService {
   //Crea un usuario de apoderado
   async createParentUser(parentData: Apoderado & { password: string }): Promise<void> {
     try {
-      //Crea un usuario de autenticación
       const app = initializeApp(getApp().options, 'parentCreationApp');
       const parentAuth = getAuth(app);
 
-      //Crea el usuario de autenticación
+      // Create authentication user
       const userCredential = await createUserWithEmailAndPassword(
         parentAuth, 
         parentData.Email, 
         parentData.password
       );
 
-      //Elimina la contraseña antes de almacenar en Firestore
+      // Remove password and store data
       const { password, ...parentDataWithoutPassword } = parentData;
-
-      //Almacena los datos del apoderado en Firestore usando el RUT como ID del documento
       const parentDoc = doc(this.firestore, `Apoderado/${parentData.RUT}`);
-      await setDoc(parentDoc, {
-        ...parentDataWithoutPassword,
-        uid: userCredential.user.uid  //Almacena el ID de autenticación del usuario para referencia
-      });
+      await setDoc(parentDoc, parentDataWithoutPassword);
 
-      //Elimina la aplicación temporal
       await deleteApp(app);
-
     } catch (error) {
       throw error;
     }
@@ -776,30 +768,22 @@ export class FirebaseService {
 
   async createConductorUser(conductorData: Conductor & { password: string }): Promise<void> {
     try {
-      // Crea una aplicación temporal de Firebase
       const app = initializeApp(getApp().options, 'conductorCreationApp');
       const conductorAuth = getAuth(app);
 
-      // Crea un usuario de autenticación
+      // Create authentication user
       const userCredential = await createUserWithEmailAndPassword(
         conductorAuth, 
         conductorData.Email, 
         conductorData.password
       );
 
-      // Elimina la contraseña antes de almacenar en Firestore
+      // Remove password and store data
       const { password, ...conductorDataWithoutPassword } = conductorData;
-
-      // Almacena los datos del conductor en Firestore usando el RUT como ID del documento
       const conductorDoc = doc(this.firestore, `Conductor/${conductorData.RUT}`);
-      await setDoc(conductorDoc, {
-        ...conductorDataWithoutPassword,
-        uid: userCredential.user.uid  // Almacena el ID de autenticación del usuario para referencia
-      });
+      await setDoc(conductorDoc, conductorDataWithoutPassword);
 
-      // Limpia la aplicación temporal
       await deleteApp(app);
-
     } catch (error) {
       throw error;
     }

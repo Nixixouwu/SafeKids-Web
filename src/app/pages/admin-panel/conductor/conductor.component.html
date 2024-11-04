@@ -131,14 +131,23 @@
                  id="edad" 
                  formControlName="Edad" 
                  placeholder="Edad"
+                 maxlength="2"
+                 min="18"
+                 max="65"
                  [class.is-invalid]="conductorForm.get('Edad')?.invalid && conductorForm.get('Edad')?.touched">
           <label for="edad">Edad</label>
           <div class="invalid-feedback">
             <span *ngIf="conductorForm.get('Edad')?.errors?.['required']">
               La edad es requerida
             </span>
-            <span *ngIf="conductorForm.get('Edad')?.errors?.['min'] || conductorForm.get('Edad')?.errors?.['max']">
-              La edad debe estar entre 18 y 65 años
+            <span *ngIf="conductorForm.get('Edad')?.errors?.['min']">
+              La edad mínima es 18 años
+            </span>
+            <span *ngIf="conductorForm.get('Edad')?.errors?.['max']">
+              La edad máxima es 65 años
+            </span>
+            <span *ngIf="conductorForm.get('Edad')?.errors?.['pattern']">
+              La edad debe ser un número de dos dígitos
             </span>
           </div>
         </div>
@@ -187,6 +196,28 @@
           <label for="fecha_admision">Fecha de Admisión</label>
           <div class="invalid-feedback">
             La fecha de admisión es requerida
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6" *ngIf="!isEditing">
+        <div class="form-floating mb-3">
+          <input type="password" 
+                 class="form-control" 
+                 id="password" 
+                 formControlName="password" 
+                 placeholder="Contraseña"
+                 [class.is-invalid]="conductorForm.get('password')?.invalid && conductorForm.get('password')?.touched">
+          <label for="password">Contraseña</label>
+          <div class="invalid-feedback">
+            <span *ngIf="conductorForm.get('password')?.errors?.['required']">
+              La contraseña es requerida
+            </span>
+            <span *ngIf="conductorForm.get('password')?.errors?.['minlength']">
+              La contraseña debe tener al menos 6 caracteres
+            </span>
+            <span *ngIf="conductorForm.get('password')?.errors?.['pattern']">
+              La contraseña debe contener al menos una letra y un número
+            </span>
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { Component, OnInit, AfterViewInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidatorFn, ValidationErrors } from '@angular/forms';
 import { FirebaseService, Alumno, College, Apoderado, AdminData } from '../../../services/firebase.service';
 import { CommonModule } from '@angular/common';
 import { firstValueFrom, combineLatest, of } from 'rxjs';
@@ -37,15 +37,45 @@ export class StudentComponent implements OnInit, AfterViewInit {
   ) {
     // Inicialización del formulario con validaciones
     this.alumnoForm = this.fb.group({
-      Apellido: ['', Validators.required],
-      Curso: ['', Validators.required],
-      Direccion: ['', Validators.required],
-      Edad: ['', [Validators.required, Validators.min(0), Validators.max(99)]],
-      FK_ALColegio: ['', Validators.required],
-      Genero: ['', Validators.required],
-      Imagen: [''],
-      Nombre: ['', Validators.required],
-      RUT: ['', [Validators.required, rutValidator()]]
+      Nombre: ['', [
+        Validators.required,
+        Validators.minLength(2),
+        Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
+      ]],
+      Apellido: ['', [
+        Validators.required,
+        Validators.minLength(2),
+        Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
+      ]],
+      RUT: ['', [
+        Validators.required, 
+        rutValidator()
+      ]],
+      Edad: ['', [
+        Validators.required,
+        Validators.min(4),
+        Validators.max(20),
+        Validators.pattern(/^[0-9]+$/)
+      ]],
+      Curso: ['', [
+        Validators.required,
+        this.cursoValidator()
+      ]],
+      Direccion: ['', [
+        Validators.required,
+        Validators.minLength(5),
+        Validators.maxLength(100)
+      ]],
+      FK_ALApoderado: ['', 
+        Validators.required
+      ],
+      FK_ALColegio: ['', 
+        Validators.required
+      ],
+      Genero: ['', 
+        Validators.required
+      ],
+      Imagen: ['']
     });
 
     // Observador para cambios en el apoderado seleccionado
@@ -63,24 +93,45 @@ export class StudentComponent implements OnInit, AfterViewInit {
     });
   }
 
-  // Validador personalizado para el campo de edad
-  ageValidator(control: AbstractControl): {[key: string]: any} | null {
-    const value = control.value;
-    if (isNaN(value) || value < 0 || value > 99) {
-      return { 'invalidAge': true };
-    }
-    return null;
+  // Validador personalizado para el formato del curso
+  private cursoValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (!control.value) return null;
+
+      // Convertir a mayúsculas automáticamente
+      let curso = control.value.toUpperCase();
+      
+      // Si el valor cambió, actualizarlo en el control
+      if (curso !== control.value) {
+        setTimeout(() => {
+          control.setValue(curso, { emitEvent: false });
+        });
+      }
+
+      // Patrón para cursos básicos: 1A, 1B, 2A, 2B, ..., 8A, 8B
+      const basicPattern = /^[1-8][A-B]$/;
+      
+      // Patrón para cursos medios: 1MA, 1MB, 2MA, 2MB, ..., 4MA, 4MB
+      const medioPattern = /^[1-4]M[A-B]$/;
+
+      if (!basicPattern.test(curso) && !medioPattern.test(curso)) {
+        return { formatoInvalido: true };
+      }
+
+      return null;
+    };
   }
 
   // Configuración del límite de edad después de que la vista se inicializa
   ngAfterViewInit() {
     const edadInput = document.getElementById('edad') as HTMLInputElement;
     edadInput.addEventListener('input', function(this: HTMLInputElement) {
+      // Limitar a 2 dígitos y máximo 20
       if (this.value.length > 2) {
         this.value = this.value.slice(0, 2);
       }
-      if (parseInt(this.value) > 99) {
-        this.value = '99';
+      if (parseInt(this.value) > 20) {
+        this.value = '20';
       }
     });
   }
@@ -109,18 +160,23 @@ export class StudentComponent implements OnInit, AfterViewInit {
 
   // Método para cargar la lista de alumnos
   async loadAlumnos() {
-    this.adminPanelComponent.currentAdminCollege$.pipe(
-      switchMap(collegeId => {
-        return collegeId ? this.firebaseService.getAlumnosByCollege(collegeId) : of([]);
-      })
-    ).subscribe(
-      alumnos => {
-        this.alumnos = alumnos;
-      },
-      error => {
+    try {
+      // Obtener el estado actual del admin
+      const isSuperAdmin = await firstValueFrom(this.adminPanelComponent.isSuperAdmin$);
+      const collegeId = await firstValueFrom(this.adminPanelComponent.currentAdminCollege$);
+
+      // Cargar alumnos según el tipo de admin
+      if (isSuperAdmin) {
+        this.alumnos = await this.firebaseService.getAlumnosByCollege(null);
+      } else if (collegeId) {
+        this.alumnos = await this.firebaseService.getAlumnosByCollege(collegeId);
+      } else {
         this.alumnos = [];
       }
-    );
+    } catch (error) {
+      console.error('Error loading alumnos:', error);
+      this.alumnos = [];
+    }
   }
 
   // Método para cargar la lista de colegios
@@ -207,9 +263,15 @@ export class StudentComponent implements OnInit, AfterViewInit {
           return;
         }
 
+        // Guardar alumno
         await this.firebaseService.addOrUpdateAlumno(alumnoData);
+        
+        // Recargar la lista de alumnos DESPUÉS de guardar
+        await this.loadAlumnos();
+        
+        // Resetear el formulario DESPUÉS de recargar los datos
         this.resetForm();
-        this.loadAlumnos();
+        
         alert('Alumno guardado exitosamente');
       } catch (error) {
         console.error('Error al guardar el alumno:', error);
@@ -232,6 +294,7 @@ export class StudentComponent implements OnInit, AfterViewInit {
       Curso: alumno.Curso,
       Direccion: alumno.Direccion,
       Edad: alumno.Edad,
+      FK_ALApoderado: alumno.FK_ALApoderado,
       FK_ALColegio: alumno.FK_ALColegio,
       Genero: alumno.Genero,
       Imagen: alumno.Imagen,

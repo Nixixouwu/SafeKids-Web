@@ -36,6 +36,7 @@ export interface Alumno {
   Direccion: string;
   Edad: number;
   FK_ALColegio: string;
+  FK_ALApoderado: string;
   Genero: string;
   Imagen: string;
   Nombre: string;
@@ -272,8 +273,13 @@ export class FirebaseService {
 
   //Agrega o actualiza un alumno
   async addOrUpdateAlumno(alumnoData: Alumno): Promise<void> {
-    const alumnoDoc = doc(this.firestore, 'Alumnos', alumnoData.RUT);
-    await setDoc(alumnoDoc, alumnoData, { merge: true });
+    try {
+      const alumnoDoc = doc(this.firestore, `Alumnos/${alumnoData.RUT}`);
+      await setDoc(alumnoDoc, alumnoData, { merge: true });
+    } catch (error) {
+      console.error('Error in addOrUpdateAlumno:', error);
+      throw error;
+    }
   }
 
   //Elimina un alumno
@@ -401,16 +407,22 @@ export class FirebaseService {
 
   //Obtiene los alumnos por colegio
   async getAlumnosByCollege(collegeId: string | null): Promise<Alumno[]> {
-    const alumnosCollection = collection(this.firestore, 'Alumnos');
-    let q;
-    if (collegeId) {
-      q = query(alumnosCollection, where('FK_ALColegio', '==', collegeId));
-    } else {
-      q = query(alumnosCollection);
+    try {
+      const alumnosCollection = collection(this.firestore, 'Alumnos');
+      let q;
+      
+      if (collegeId) {
+        q = query(alumnosCollection, where('FK_ALColegio', '==', collegeId));
+      } else {
+        q = query(alumnosCollection);
+      }
+
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => doc.data() as Alumno);
+    } catch (error) {
+      console.error('Error in getAlumnosByCollege:', error);
+      throw error;
     }
-    const alumnosSnapshot = await getDocs(q);
-    const alumnos = alumnosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Alumno));
-    return alumnos;
   }
 
   //Obtiene un colegio

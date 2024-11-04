@@ -25,8 +25,22 @@
         </div>
         <div class="col-md-6">
           <div class="form-floating mb-3">
-            <input type="text" class="form-control" id="curso" formControlName="Curso" placeholder="Curso" maxlength="3">
+            <input type="text" 
+                   class="form-control" 
+                   id="curso" 
+                   formControlName="Curso" 
+                   placeholder="Curso"
+                   [class.is-invalid]="alumnoForm.get('Curso')?.invalid && alumnoForm.get('Curso')?.touched" 
+                   maxlength="3">
             <label for="curso">Curso</label>
+            <div class="invalid-feedback">
+              <span *ngIf="alumnoForm.get('Curso')?.errors?.['required']">
+                El curso es requerido
+              </span>
+              <span *ngIf="alumnoForm.get('Curso')?.errors?.['formatoInvalido']">
+                Formato inválido. Use 1A-8B para básica o 1MA-4MB para media
+              </span>
+            </div>
           </div>
         </div>
         <div class="col-md-6">
@@ -37,8 +51,24 @@
         </div>
         <div class="col-md-6">
           <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="edad" formControlName="Edad" placeholder="Edad" min="0" max="99">
+            <input type="number" 
+                   class="form-control" 
+                   id="edad" 
+                   formControlName="Edad" 
+                   placeholder="Edad"
+                   [class.is-invalid]="alumnoForm.get('Edad')?.invalid && alumnoForm.get('Edad')?.touched">
             <label for="edad">Edad</label>
+            <div class="invalid-feedback">
+              <span *ngIf="alumnoForm.get('Edad')?.errors?.['required']">
+                La edad es requerida
+              </span>
+              <span *ngIf="alumnoForm.get('Edad')?.errors?.['min']">
+                La edad mínima es 4 años
+              </span>
+              <span *ngIf="alumnoForm.get('Edad')?.errors?.['max']">
+                La edad máxima es 20 años
+              </span>
+            </div>
           </div>
         </div>
         <div class="col-md-6">
@@ -80,6 +110,17 @@
               [src]="imagePreview || alumnoForm.get('Imagen')?.value" 
               alt="Preview"
               class="img-preview">
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-floating mb-3">
+            <select class="form-select" id="fk_alapoderado" formControlName="FK_ALApoderado">
+              <option value="" disabled selected>Seleccione un apoderado</option>
+              <option *ngFor="let apoderado of apoderados" [value]="apoderado.RUT">
+                {{ apoderado.Nombre }} {{ apoderado.Apellido }}
+              </option>
+            </select>
+            <label for="fk_alapoderado">Apoderado</label>
           </div>
         </div>
       </div>

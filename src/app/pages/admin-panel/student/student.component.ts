@@ -49,12 +49,6 @@ export class StudentComponent implements OnInit, AfterViewInit {
         Validators.maxLength(50),
         Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
       ]],
-      Email: ['', [
-        Validators.required,
-        Validators.email,
-        Validators.maxLength(100),
-        Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
-      ]],
       RUT: ['', [
         Validators.required,
         rutValidator()
@@ -75,6 +69,7 @@ export class StudentComponent implements OnInit, AfterViewInit {
         Validators.maxLength(100)
       ]],
       FK_ALColegio: ['', Validators.required],
+      FK_ALApoderado: ['', Validators.required],
       Genero: ['', Validators.required],
       Imagen: ['']
     });
@@ -140,6 +135,7 @@ export class StudentComponent implements OnInit, AfterViewInit {
     // Cargar datos
     this.loadColleges();
     this.loadAlumnos();
+    this.loadApoderados();
   }
 
   // Método para cargar la lista de alumnos
@@ -195,26 +191,19 @@ export class StudentComponent implements OnInit, AfterViewInit {
 
   // Método para cargar la lista de apoderados
   async loadApoderados() {
-    combineLatest([
-      this.adminPanelComponent.isSuperAdmin$,
-      this.adminPanelComponent.currentAdminCollege$
-    ]).pipe(
-      switchMap(([isSuperAdmin, collegeId]) => {
-        if (isSuperAdmin) {
-          return this.firebaseService.getApoderados();
-        } else {
-          return collegeId ? this.firebaseService.getApoderadosByCollege(collegeId) : of([]);
-        }
-      })
-    ).subscribe(
-      apoderados => {
-        this.apoderados = apoderados;
-        this.apoderadoCollegeMap = new Map(this.apoderados.map(apoderado => [apoderado.RUT, apoderado.FK_APColegio]));
-      },
-      error => {
-        this.apoderados = [];
+    try {
+      const isSuperAdmin = await firstValueFrom(this.adminPanelComponent.isSuperAdmin$);
+      const collegeId = await firstValueFrom(this.adminPanelComponent.currentAdminCollege$);
+
+      if (isSuperAdmin) {
+        this.apoderados = await this.firebaseService.getApoderados();
+      } else if (collegeId) {
+        this.apoderados = await this.firebaseService.getApoderadosByCollege(collegeId);
       }
-    );
+    } catch (error) {
+      console.error('Error loading apoderados:', error);
+      this.apoderados = [];
+    }
   }
 
   // Método para manejar el envío del formulario
@@ -285,6 +274,7 @@ export class StudentComponent implements OnInit, AfterViewInit {
       Direccion: alumno.Direccion,
       Edad: alumno.Edad,
       FK_ALColegio: alumno.FK_ALColegio,
+      FK_ALApoderado: alumno.FK_ALApoderado,
       Genero: alumno.Genero,
       Imagen: alumno.Imagen,
       Nombre: alumno.Nombre,
@@ -369,12 +359,6 @@ export class StudentComponent implements OnInit, AfterViewInit {
         Validators.maxLength(50),
         Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
       ]],
-      Email: ['', [
-        Validators.required,
-        Validators.email,
-        Validators.maxLength(100),
-        Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
-      ]],
       RUT: ['', [
         Validators.required,
         rutValidator()
@@ -394,8 +378,15 @@ export class StudentComponent implements OnInit, AfterViewInit {
         Validators.maxLength(100)
       ]],
       FK_ALColegio: ['', Validators.required],
+      FK_ALApoderado: ['', Validators.required],
       Genero: ['', Validators.required],
       Imagen: ['']
     });
   }
+
+  getParentName(rutApoderado: string): string {
+    const apoderado = this.apoderados.find(a => a.RUT === rutApoderado);
+    return apoderado ? `${apoderado.Nombre} ${apoderado.Apellido}` : 'Sin Apoderado';
+  }
+
 }

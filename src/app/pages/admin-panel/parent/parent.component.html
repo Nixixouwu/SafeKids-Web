@@ -128,42 +128,6 @@
         </div>
       </div>
 
-      <div class="col-md-6">
-        <div class="form-floating mb-3">
-          <select class="form-select" 
-                  id="fk_apalumno" 
-                  formControlName="FK_APAlumno"
-                  [class.is-invalid]="apoderadoForm.get('FK_APAlumno')?.invalid && apoderadoForm.get('FK_APAlumno')?.touched">
-            <option value="" disabled selected>Seleccione un alumno</option>
-            <option *ngFor="let alumno of alumnos" [value]="alumno.RUT">
-              {{ alumno.Nombre }} {{ alumno.Apellido }} ({{ alumno.RUT }})
-            </option>
-          </select>
-          <label for="fk_apalumno">Alumno</label>
-          <div class="invalid-feedback">
-            El alumno es requerido
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-6">
-        <div class="form-floating mb-3">
-          <input type="file" 
-                 class="form-control" 
-                 id="imagen"
-                 (change)="onFileSelected($event)"
-                 accept="image/*"
-                 #fileInput>
-          <label for="imagen">Imagen del Apoderado</label>
-        </div>
-        
-        <div *ngIf="imagePreview || apoderadoForm.get('Imagen')?.value" class="mb-3">
-          <img [src]="imagePreview || apoderadoForm.get('Imagen')?.value" 
-               alt="Preview" 
-               class="img-preview">
-        </div>
-      </div>
-
       <div class="col-md-6" *ngIf="!isEditing">
         <div class="form-floating mb-3">
           <input type="password" 
@@ -186,6 +150,26 @@
           </div>
         </div>
       </div>
+
+      <div class="col-md-6">
+        <div class="form-floating mb-3">
+          <input type="file" 
+                 class="form-control" 
+                 id="imagen"
+                 (change)="onFileSelected($event)"
+                 accept="image/*"
+                 #fileInput>
+          <label for="imagen">Imagen del Apoderado</label>
+        </div>
+        
+        <div *ngIf="imagePreview || apoderadoForm.get('Imagen')?.value" class="mb-3">
+          <img [src]="imagePreview || apoderadoForm.get('Imagen')?.value" 
+               alt="Preview" 
+               class="img-preview">
+        </div>
+      </div>
+
+      
     </div>
 
     <div class="mt-3">

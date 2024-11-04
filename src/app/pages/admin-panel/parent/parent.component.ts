@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { FirebaseService, Apoderado, College, Alumno } from '../../../services/firebase.service';
+import { FirebaseService, Apoderado, College } from '../../../services/firebase.service';
 import { CommonModule } from '@angular/common';
 import { NumbersOnlyDirective } from '../../../validators/numbers-only.validator';
 import { RutFormatterDirective } from '../../../validators/rut-formatter.validator';
@@ -27,7 +27,6 @@ export class ParentComponent implements OnInit {
   currentParentRut: string | null = null;
   selectedFile: File | null = null;
   imagePreview: string | null = null;
-  alumnos: Alumno[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -66,7 +65,6 @@ export class ParentComponent implements OnInit {
       FK_APColegio: ['', 
         Validators.required
       ],
-      FK_APAlumno: ['', Validators.required],
       password: ['', [
         Validators.required,
         Validators.minLength(6),
@@ -80,7 +78,6 @@ export class ParentComponent implements OnInit {
   ngOnInit() {
     this.loadApoderados();
     this.loadColleges();
-    this.loadAlumnos();
   }
 
   // Método para cargar los datos del administrador actual
@@ -147,23 +144,6 @@ export class ParentComponent implements OnInit {
   // Método auxiliar para obtener el nombre del colegio
   getCollegeName(id: string): string {
     return this.collegeMap.get(id) || 'Unknown College';
-  }
-
-  // Método para cargar la lista de alumnos
-  async loadAlumnos() {
-    try {
-      const isSuperAdmin = await firstValueFrom(this.adminPanelComponent.isSuperAdmin$);
-      const collegeId = await firstValueFrom(this.adminPanelComponent.currentAdminCollege$);
-
-      if (isSuperAdmin) {
-        this.alumnos = await this.firebaseService.getAlumnosByCollege(null);
-      } else if (collegeId) {
-        this.alumnos = await this.firebaseService.getAlumnosByCollege(collegeId);
-      }
-    } catch (error) {
-      console.error('Error loading alumnos:', error);
-      this.alumnos = [];
-    }
   }
 
   // Método para manejar el envío del formulario

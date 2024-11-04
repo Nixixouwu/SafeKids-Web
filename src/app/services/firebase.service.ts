@@ -66,6 +66,7 @@ export interface Conductor {
   Fecha_Admision: string;
   Imagen: string;
   Genero: string;
+  Telefono: string;
 }
 
 export interface Bus {

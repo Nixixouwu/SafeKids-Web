@@ -53,15 +53,19 @@ export class ConductorComponent implements OnInit {
         Validators.maxLength(50),
         Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
       ]],
+      RUT: ['', [
+        Validators.required,
+        rutValidator()
+      ]],
       Email: ['', [
         Validators.required,
         Validators.email,
         Validators.maxLength(100),
         Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
       ]],
-      RUT: ['', [
+      Telefono: ['', [
         Validators.required,
-        rutValidator()
+        Validators.pattern(/^\+?[0-9]{8,15}$/)
       ]],
       Direccion: ['', [
         Validators.required,
@@ -71,17 +75,11 @@ export class ConductorComponent implements OnInit {
       Edad: ['', [
         Validators.required,
         Validators.min(18),
-        Validators.max(65),
-        Validators.pattern(/^[0-9]+$/)
+        Validators.max(65)
       ]],
       Genero: ['', Validators.required],
       FK_COColegio: ['', Validators.required],
       Fecha_Admision: ['', Validators.required],
-      password: ['', [
-        Validators.required,
-        Validators.minLength(6),
-        Validators.pattern(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/)
-      ]],
       Imagen: ['']
     });
   }

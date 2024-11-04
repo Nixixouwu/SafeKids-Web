@@ -41,17 +41,45 @@ export class ConductorComponent implements OnInit {
   ) {
     // Inicialización del formulario con validaciones específicas para conductores
     this.conductorForm = this.fb.group({
-      Apellido: ['', Validators.required],
-      Direccion: ['', Validators.required],
-      Edad: ['', [Validators.required, Validators.min(18), Validators.max(65)]], // Restricción de edad para conductores
+      Nombre: ['', [
+        Validators.required,
+        Validators.minLength(2),
+        Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
+      ]],
+      Apellido: ['', [
+        Validators.required,
+        Validators.minLength(2),
+        Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
+      ]],
+      RUT: ['', [
+        Validators.required,
+        rutValidator()
+      ]],
+      Email: ['', [
+        Validators.required,
+        Validators.email,
+        Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
+      ]],
+      Direccion: ['', [
+        Validators.required,
+        Validators.minLength(5),
+        Validators.maxLength(100)
+      ]],
+      Edad: ['', [
+        Validators.required,
+        Validators.min(18),
+        Validators.max(65),
+        Validators.pattern(/^[0-9]+$/)
+      ]],
       Genero: ['', Validators.required],
-      Imagen: [''],
-      Nombre: ['', Validators.required],
-      RUT: ['', [Validators.required, rutValidator()]],
-      Email: ['', [Validators.required, Validators.email]],
       FK_COColegio: ['', Validators.required],
       Fecha_Admision: ['', Validators.required],
-      password: ['', [Validators.required, Validators.minLength(6)]],
+      password: ['', [
+        Validators.required,
+        Validators.minLength(6),
+        Validators.pattern(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/)
+      ]],
+      Imagen: ['']
     });
   }
 

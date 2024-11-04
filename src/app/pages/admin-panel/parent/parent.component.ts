@@ -64,6 +64,11 @@ export class ParentComponent implements OnInit {
         Validators.required
       ],
       FK_APAlumno: ['', Validators.required],
+      password: ['', [
+        Validators.required,
+        Validators.minLength(6),
+        Validators.pattern(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/)
+      ]],
       Imagen: [''],
     });
   }
@@ -164,56 +169,27 @@ export class ParentComponent implements OnInit {
       try {
         const apoderadoData = this.apoderadoForm.getRawValue();
         
-        // Verificar que el alumno no esté ya asignado a otro apoderado
-        const existingApoderado = this.apoderados.find(
-          ap => ap.FK_APAlumno === apoderadoData.FK_APAlumno && ap.RUT !== apoderadoData.RUT
-        );
-        
-        if (existingApoderado) {
-          alert('Este alumno ya tiene un apoderado asignado.');
-          return;
-        }
-
-        // Handle image upload with old image cleanup
+        // Si hay una imagen seleccionada, súbela primero
         if (this.selectedFile) {
-          const oldImageUrl = this.isEditing ? 
-            this.apoderados.find(a => a.RUT === apoderadoData.RUT)?.Imagen : 
-            undefined;
-
           const imageUrl = await this.firebaseService.uploadImage(
             this.selectedFile,
-            `apoderados/${apoderadoData.RUT}`, // Organize by parent RUT
-            oldImageUrl
+            'apoderados',
+            this.isEditing ? apoderadoData.Imagen : undefined
           );
           apoderadoData.Imagen = imageUrl;
-        } else if (this.isEditing) {
-          // Keep existing image if no new one is selected
-          const currentParent = this.apoderados.find(a => a.RUT === apoderadoData.RUT);
-          if (currentParent) {
-            apoderadoData.Imagen = currentParent.Imagen;
-          }
-        }
-        
-        // Verificación de RUT duplicado
-        const existingParent = this.apoderados.find(parent => 
-          parent.RUT === apoderadoData.RUT && !this.isEditing
-        );
-        
-        if (existingParent) {
-          alert('Ya existe un apoderado con este RUT. Por favor, use un RUT diferente.');
-          return;
         }
 
-        // Lógica diferente para edición y creación
         if (this.isEditing) {
-          const { password, ...updateData } = apoderadoData;
-          await this.firebaseService.addOrUpdateApoderado(updateData);
+          // Si está editando, no enviar la contraseña
+          const { password, ...dataToUpdate } = apoderadoData;
+          await this.firebaseService.addOrUpdateApoderado(dataToUpdate);
         } else {
+          // Si es nuevo, crear usuario con contraseña
           await this.firebaseService.createParentUser(apoderadoData);
         }
 
+        await this.loadApoderados();
         this.resetForm();
-        this.loadApoderados();
         alert('Apoderado guardado exitosamente');
       } catch (error) {
         console.error('Error al guardar el apoderado:', error);

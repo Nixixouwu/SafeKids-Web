@@ -92,6 +92,7 @@
             <label for="fk_alcolegio">Colegio</label>
           </div>
         </div>
+       
         <div class="col-md-6">
           <div class="form-floating mb-3">
             <input 
@@ -104,7 +105,6 @@
             <label for="imagen" class="form-label">Imagen del Alumno</label>
           </div>
           
-          <!-- Preview de la imagen -->
           <div *ngIf="imagePreview || alumnoForm.get('Imagen')?.value" class="mb-3">
             <img 
               [src]="imagePreview || alumnoForm.get('Imagen')?.value" 
@@ -112,17 +112,7 @@
               class="img-preview">
           </div>
         </div>
-        <div class="col-md-6">
-          <div class="form-floating mb-3">
-            <select class="form-select" id="fk_alapoderado" formControlName="FK_ALApoderado">
-              <option value="" disabled selected>Seleccione un apoderado</option>
-              <option *ngFor="let apoderado of apoderados" [value]="apoderado.RUT">
-                {{ apoderado.Nombre }} {{ apoderado.Apellido }}
-              </option>
-            </select>
-            <label for="fk_alapoderado">Apoderado</label>
-          </div>
-        </div>
+
       </div>
       <div class="mt-3">
         <button type="submit" class="btn btn-primary me-2" [disabled]="!alumnoForm.valid">

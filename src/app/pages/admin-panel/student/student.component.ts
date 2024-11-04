@@ -48,7 +48,7 @@ export class StudentComponent implements OnInit, AfterViewInit {
         Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
       ]],
       RUT: ['', [
-        Validators.required, 
+        Validators.required,
         rutValidator()
       ]],
       Edad: ['', [
@@ -66,29 +66,17 @@ export class StudentComponent implements OnInit, AfterViewInit {
         Validators.minLength(5),
         Validators.maxLength(100)
       ]],
-      FK_ALApoderado: ['', 
-        Validators.required
-      ],
-      FK_ALColegio: ['', 
-        Validators.required
-      ],
-      Genero: ['', 
-        Validators.required
-      ],
+      FK_ALColegio: ['', Validators.required],
+      Genero: ['', Validators.required],
       Imagen: ['']
     });
 
     // Observador para cambios en el apoderado seleccionado
-    this.alumnoForm.get('FK_ALApoderado')?.valueChanges.subscribe(apoderadoRUT => {
-      if (apoderadoRUT) {
+    this.alumnoForm.get('FK_ALColegio')?.valueChanges.subscribe(collegeId => {
+      if (collegeId) {
         // Actualiza automáticamente el colegio según el apoderado seleccionado
-        const collegeId = this.apoderadoCollegeMap.get(apoderadoRUT);
-        if (collegeId) {
-          this.alumnoForm.patchValue({ FK_ALColegio: collegeId });
-          this.alumnoForm.get('FK_ALColegio')?.disable();
-        }
-      } else {
-        this.alumnoForm.get('FK_ALColegio')?.enable();
+        this.alumnoForm.patchValue({ FK_ALColegio: collegeId });
+        this.alumnoForm.get('FK_ALColegio')?.disable();
       }
     });
   }
@@ -138,24 +126,12 @@ export class StudentComponent implements OnInit, AfterViewInit {
 
   // Inicialización del componente y carga de datos
   ngOnInit() {
-    combineLatest([
-      this.adminPanelComponent.isSuperAdmin$,
-      this.adminPanelComponent.currentAdminCollege$
-    ]).pipe(
-      switchMap(([isSuperAdmin, collegeId]) => {
-        if (isSuperAdmin) {
-          return this.firebaseService.getAlumnosByCollege(null);
-        } else {
-          return collegeId ? this.firebaseService.getAlumnosByCollege(collegeId) : of([]);
-        }
-      })
-    ).subscribe(alumnos => {
-      this.alumnos = alumnos;
-    });
+    // Inicializar el formulario
+    this.initForm();
 
-    // Carga de datos complementarios
+    // Cargar datos
     this.loadColleges();
-    this.loadApoderados();
+    this.loadAlumnos();
   }
 
   // Método para cargar la lista de alumnos
@@ -179,28 +155,34 @@ export class StudentComponent implements OnInit, AfterViewInit {
     }
   }
 
-  // Método para cargar la lista de colegios
+  // Método para cargar los colegios
   async loadColleges() {
-    combineLatest([
-      this.adminPanelComponent.isSuperAdmin$,
-      this.adminPanelComponent.currentAdminCollege$
-    ]).pipe(
-      switchMap(([isSuperAdmin, collegeId]) => {
-        if (isSuperAdmin) {
-          return this.firebaseService.getColleges();
-        } else {
-          return collegeId ? this.firebaseService.getCollege(collegeId).then(college => college ? [college] : []) : of([]);
-        }
-      })
-    ).subscribe(
-      colleges => {
-        this.colleges = colleges;
-        this.collegeMap = new Map(this.colleges.map(college => [college.id, college.Nombre]));
-      },
-      error => {
-        this.colleges = [];
+    try {
+      // Obtener el estado actual del admin
+      const isSuperAdmin = await firstValueFrom(this.adminPanelComponent.isSuperAdmin$);
+      const currentCollege = await firstValueFrom(this.adminPanelComponent.currentAdminCollege$);
+
+      if (isSuperAdmin) {
+        // Si es super admin, cargar todos los colegios
+        this.colleges = await this.firebaseService.getColleges();
+      } else if (currentCollege) {
+        // Si es admin normal, cargar solo su colegio
+        const college = await this.firebaseService.getCollege(currentCollege);
+        this.colleges = college ? [college] : [];
+        
+        // Establecer automáticamente el colegio y deshabilitar el campo
+        this.alumnoForm.patchValue({ FK_ALColegio: currentCollege });
+        this.alumnoForm.get('FK_ALColegio')?.disable();
       }
-    );
+
+      // Actualizar el mapa de colegios
+      this.collegeMap = new Map(
+        this.colleges.map(college => [college.id, college.Nombre])
+      );
+    } catch (error) {
+      console.error('Error loading colleges:', error);
+      this.colleges = [];
+    }
   }
 
   // Método para cargar la lista de apoderados
@@ -294,7 +276,6 @@ export class StudentComponent implements OnInit, AfterViewInit {
       Curso: alumno.Curso,
       Direccion: alumno.Direccion,
       Edad: alumno.Edad,
-      FK_ALApoderado: alumno.FK_ALApoderado,
       FK_ALColegio: alumno.FK_ALColegio,
       Genero: alumno.Genero,
       Imagen: alumno.Imagen,
@@ -363,5 +344,42 @@ export class StudentComponent implements OnInit, AfterViewInit {
       };
       reader.readAsDataURL(file);
     }
+  }
+
+  // Método para inicializar el formulario
+  private initForm() {
+    this.alumnoForm = this.fb.group({
+      Nombre: ['', [
+        Validators.required,
+        Validators.minLength(2),
+        Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
+      ]],
+      Apellido: ['', [
+        Validators.required,
+        Validators.minLength(2),
+        Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
+      ]],
+      RUT: ['', [
+        Validators.required,
+        rutValidator()
+      ]],
+      Curso: ['', [
+        Validators.required,
+        this.cursoValidator()
+      ]],
+      Direccion: ['', [
+        Validators.required,
+        Validators.minLength(5),
+        Validators.maxLength(100)
+      ]],
+      Edad: ['', [
+        Validators.required,
+        Validators.min(4),
+        Validators.max(20)
+      ]],
+      FK_ALColegio: ['', Validators.required],
+      Genero: ['', Validators.required],
+      Imagen: ['']
+    });
   }
 }

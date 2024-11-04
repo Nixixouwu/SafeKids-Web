@@ -36,15 +36,35 @@ export class ParentComponent implements OnInit {
   ) {
     // Inicialización del formulario con validaciones
     this.apoderadoForm = this.fb.group({
-      Nombre: ['', Validators.required],
-      Apellido: ['', Validators.required],
-      RUT: ['', [Validators.required, rutValidator()]],
-      Email: ['', [Validators.required, Validators.email]],
-      Telefono: ['', Validators.required],
-      FK_APColegio: ['', Validators.required],
+      // Datos personales
+      Nombre: ['', [
+        Validators.required,
+        Validators.minLength(2),
+        Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
+      ]],
+      Apellido: ['', [
+        Validators.required,
+        Validators.minLength(2),
+        Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)
+      ]],
+      RUT: ['', [
+        Validators.required,
+        rutValidator()
+      ]],
+      Email: ['', [
+        Validators.required,
+        Validators.email,
+        Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
+      ]],
+      Telefono: ['', [
+        Validators.required,
+        Validators.pattern(/^\+?[0-9]{8,15}$/) // Acepta números entre 8 y 15 dígitos, con o sin '+'
+      ]],
+      FK_APColegio: ['', 
+        Validators.required
+      ],
+      FK_APAlumno: ['', Validators.required],
       Imagen: [''],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      FK_APAlumno: ['', Validators.required]
     });
   }
 
@@ -124,9 +144,17 @@ export class ParentComponent implements OnInit {
   // Método para cargar la lista de alumnos
   async loadAlumnos() {
     try {
-      this.alumnos = await this.firebaseService.getAlumnos();
+      const isSuperAdmin = await firstValueFrom(this.adminPanelComponent.isSuperAdmin$);
+      const collegeId = await firstValueFrom(this.adminPanelComponent.currentAdminCollege$);
+
+      if (isSuperAdmin) {
+        this.alumnos = await this.firebaseService.getAlumnosByCollege(null);
+      } else if (collegeId) {
+        this.alumnos = await this.firebaseService.getAlumnosByCollege(collegeId);
+      }
     } catch (error) {
       console.error('Error loading alumnos:', error);
+      this.alumnos = [];
     }
   }
 

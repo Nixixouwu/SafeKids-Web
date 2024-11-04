@@ -36,7 +36,6 @@ export interface Alumno {
   Direccion: string;
   Edad: number;
   FK_ALColegio: string;
-  FK_ALApoderado: string;
   Genero: string;
   Imagen: string;
   Nombre: string;

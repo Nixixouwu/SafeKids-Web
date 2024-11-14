@@ -1,69 +1,59 @@
 :host {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     min-height: 100vh;
     background-image: url('../../../assets/images/backgrounds/auth.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+    padding-top: 5rem;
 }
 
 .container-register {
-    max-width: 30%;
+    width: 90%;
+    max-width: 500px;
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     border-radius: 1rem;
     overflow: hidden;
-    padding: 1.5rem;
+    padding: 2rem;
+    transition: margin-top 0.3s ease;
+
+    @media (max-width: 991.98px) {
+        margin-top: 5rem;
+        
+        &.menu-open {
+            margin-top: 10rem;
+        }
+    }
 }
 
 h2 {
     text-align: center;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
     color: #333;
     font-weight: bold;
-    font-size: 2rem;
+    font-size: 1.8rem;
 }
 
 .form-group {
-    margin-bottom: 0.5rem;
+    margin-bottom: 1rem;
 
     label {
         display: block;
         color: white;
         font-weight: bold;
+        margin-bottom: 0.3rem;
     }
 
     input, select {
         width: 100%;
-        padding: 0.5rem 1rem;
+        padding: 0.75rem 1rem;
         border: none;
         border-radius: 1rem;
         background: rgba(255, 255, 255, 0.9);
-    }
-
-
-}
-
-.checkbox {
-    display: flex;
-    align-items: center;
-    margin-bottom: 1rem;
-    margin-left: 0.5rem;
-
-    input {
-        margin-right: 1rem;
-        transform: scale(1.5);
-        flex-shrink: 0; // Prevent the checkbox from shrinking
-        width: auto; // Reset the width to its default
-        height: auto; // Reset the height to its default
-    }
-
-    label {
-        font-size: 0.9rem;
-        color: white;
-        flex: 1; // Allow the label to take up remaining space
+        font-size: 1rem;
     }
 }
 
@@ -94,8 +84,18 @@ a {
 }
 
 @media (max-width: 768px) {
-    .container {
+    .container-register {
         width: 95%;
+        padding: 1.5rem;
+        margin: 1rem auto;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 0.8rem;
     }
 }
 

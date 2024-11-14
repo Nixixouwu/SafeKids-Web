@@ -5,19 +5,40 @@
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+
+    @media (max-width: 991.98px) {
+        background-image: none;
+        background: linear-gradient(to right, #8b52fe, #64c8ea);
+    }
 }
 
 .home-container {
     min-height: 100vh;
     display: flex;
     align-items: center;
-    padding-bottom: 5rem;
-    padding-left: 5rem;
+    transition: padding-top 0.3s ease;
+
+    @media (max-width: 991.98px) {
+        padding: 1rem;
+        justify-content: center;
+        padding-top: 5rem;
+
+        &.menu-open {
+            padding-top: 14rem;
+        }
+    }
 }
 
 .text-content {
     padding: 2rem;
     color: black;
+
+    @media (max-width: 991.98px) {
+        text-align: center;
+        padding: 1rem;
+        max-width: 90%;
+        margin: 0 auto;
+    }
 
     h2 {
         font-size: 1.5rem;

@@ -1,5 +1,5 @@
 :host {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
@@ -86,4 +86,36 @@ header {
 
 .loading .auth-buttons {
   opacity: 0;
+}
+
+// Add styles for the collapsed menu
+.navbar-collapse {
+  @media (max-width: 991.98px) {
+    padding: 1rem;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+  }
+}
+
+// Home page gradient
+:host-context(app-home) .navbar-collapse {
+  @media (max-width: 991.98px) {
+    background: linear-gradient(to right, #8b52fe, #64c8ea);  // Home gradient
+  }
+}
+
+// Contact page gradient
+:host-context(app-contact) .navbar-collapse {
+  @media (max-width: 991.98px) {
+    background: linear-gradient(to right, #8b52fe, #00be63);  // Contact gradient
+  }
+}
+
+// Login page gradient
+:host-context(app-login) .navbar-collapse {
+  @media (max-width: 991.98px) {
+    background: linear-gradient(to right, #3dacd2, #207ec1);  // Login gradient
+  }
 }

@@ -40,8 +40,7 @@ export class RegisterComponent implements OnInit {
       apellido: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       telefono: ['', [Validators.required, Validators.pattern('^[0-9]*$')]],
-      fk_adcolegio: ['', Validators.required],
-      terms: [false, Validators.requiredTrue]
+      fk_adcolegio: ['', Validators.required]
     });
   }
 
@@ -77,8 +76,6 @@ export class RegisterComponent implements OnInit {
         this.errorMessage = 'Por favor, ingrese un número de teléfono válido.';
       } else if (this.registerForm.get('fk_adcolegio')?.invalid) {
         this.errorMessage = 'Por favor, seleccione un instituto educacional.';
-      } else if (this.registerForm.get('terms')?.invalid) {
-        this.errorMessage = 'Debe aceptar los términos y condiciones para continuar.';
       } else {
         this.errorMessage = 'Por favor, complete todos los campos correctamente.';
       }

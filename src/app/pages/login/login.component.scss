@@ -16,6 +16,16 @@
     border-radius: 1rem;
     overflow: hidden;
     padding: 2rem;
+    transition: padding-top 0.3s ease;
+
+    @media (max-width: 991.98px) {
+        width: 95%;
+        margin-top: 5rem;  // Default space for mobile
+        
+        &.menu-open {
+            margin-top: 8rem;  // Smaller space when menu is open
+        }
+    }
 }
 
 h2 {

@@ -10,17 +10,26 @@ import { User } from '@angular/fire/auth';
   standalone: true,
   imports: [RouterModule, CommonModule],
   templateUrl: './header.component.html',
-  styleUrl: './header.component.scss'
+  styleUrl: './header.component.scss',
+  exportAs: 'header'
 })
 export class HeaderComponent implements OnInit {
   user$: Observable<User | null>;
-// Constructor del componente
+  isMenuCollapsed = true;
+
   constructor(private firebaseService: FirebaseService) {
     this.user$ = this.firebaseService.getCurrentUser();
   }
-// Método para inicializar el componente
+
   ngOnInit() {}
-// Método para cerrar sesión
+
+  toggleMenu() {
+    this.isMenuCollapsed = !this.isMenuCollapsed;
+    document.querySelector('.home-container')?.classList.toggle('menu-open', !this.isMenuCollapsed);
+    document.querySelector('.container-login')?.classList.toggle('menu-open', !this.isMenuCollapsed);
+    document.querySelector('.container-register')?.classList.toggle('menu-open', !this.isMenuCollapsed);
+  }
+
   logout() {
     this.firebaseService.signOut();
   }

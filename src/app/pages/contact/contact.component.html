@@ -1,5 +1,5 @@
-<app-header></app-header>
-<div class="contact-container">
+<app-header #header="header"></app-header>
+<div class="contact-container" [ngStyle]="{'margin-top': !header.isMenuCollapsed ? '12rem' : '0rem'}">
   <div class="row">
     <div class="col-md-5 info-section">
       <h1>Contacto</h1>
